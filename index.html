@@ -1,332 +1,497 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <title>Quiz App</title>
-  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#f59e0b">
+  <title>宗教学クイズ</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📿</text></svg>">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <style>
-    body { font-family: system-ui; background:#f5f5f5; margin:0; }
-    .container { max-width:720px; margin:auto; padding:16px; }
-    .card { background:white; border-radius:12px; padding:16px; margin-bottom:12px; }
-    .btn { padding:8px 12px; border:none; border-radius:8px; cursor:pointer; }
-    .primary { background:#2563eb; color:white; }
-    .ghost { background:#e5e7eb; }
-    .row { display:flex; gap:8px; flex-wrap:wrap; }
-    .stat { text-align:center; flex:1; }
-    .progress { height:6px; background:#e5e7eb; border-radius:999px; overflow:hidden; }
-    .progress > div { height:100%; background:#2563eb; }
-    .modal-bg { position:fixed; inset:0; background:rgba(0,0,0,.4); }
-    .modal { background:white; max-width:600px; margin:10vh auto; padding:16px; border-radius:12px; }
+    * { -webkit-tap-highlight-color: transparent; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', sans-serif; }
+    .active\:scale-98:active { transform: scale(0.98); }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
   </style>
 </head>
 <body>
-<div id="root"></div>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect } = React;
 
-<script type="text/babel">
+    // Quiz Data - 136 questions
+    const quizData = [
+      {id:1,question:"世界中で宗教人口が最も多い宗教はどれか",choice_a:"キリスト教",choice_b:"イスラーム",choice_c:"ヒンドゥー教",choice_d:"仏教",answer:"A",category:"世界宗教統計"},
+      {id:2,question:"世界中のキリスト教徒の人口として正しいものはどれか",choice_a:"約10.3億人",choice_b:"約15.9億人",choice_c:"約21.6億人",choice_d:"約4.9億人",answer:"C",category:"世界宗教統計"},
+      {id:3,question:"キリスト教徒が世界総人口に占める割合として正しいものはどれか",choice_a:"約15％",choice_b:"約22％",choice_c:"約31％",choice_d:"約45％",answer:"C",category:"世界宗教統計"},
+      {id:4,question:"世界中で宗教人口が2番目に多い宗教はどれか",choice_a:"キリスト教",choice_b:"イスラーム",choice_c:"ヒンドゥー教",choice_d:"仏教",answer:"B",category:"世界宗教統計"},
+      {id:5,question:"世界中のイスラーム教徒（ムスリム）の人口として正しいものはどれか",choice_a:"約4.9億人",choice_b:"約10.3億人",choice_c:"約15.9億人",choice_d:"約21.6億人",answer:"C",category:"世界宗教統計"},
+      {id:6,question:"世界中のヒンドゥー教徒の人口として正しいものはどれか",choice_a:"約4.9億人",choice_b:"約10.3億人",choice_c:"約15.9億人",choice_d:"約21.6億人",answer:"B",category:"世界宗教統計"},
+      {id:7,question:"世界中の仏教徒の人口として正しいものはどれか",choice_a:"約4.9億人",choice_b:"約10.3億人",choice_c:"約15.9億人",choice_d:"約21.6億人",answer:"A",category:"世界宗教統計"},
+      {id:8,question:"日本における宗教法人数や信者数を掲載した資料は何か",choice_a:"宗教年表",choice_b:"宗教年鑑",choice_c:"日本宗教史",choice_d:"宗教白書",answer:"B",category:"日本宗教統計"},
+      {id:9,question:"日本の宗教年鑑における宗教団体の分類として存在しないものはどれか",choice_a:"ユダヤ系",choice_b:"キリスト系",choice_c:"神道系",choice_d:"仏教系",answer:"A",category:"日本宗教統計"},
+      {id:10,question:"日本において信者数が最も多い宗教系統の組み合わせとして正しいものはどれか",choice_a:"神道系と仏教系",choice_b:"キリスト系と諸教系",choice_c:"仏教系とキリスト系",choice_d:"神道系と諸教系",answer:"A",category:"日本宗教統計"},
+      {id:11,question:"ユダヤ教について正しいものはどれか",choice_a:"イエスを神の子として信仰する",choice_b:"開祖はムハンマドである",choice_c:"民族宗教としての性格が強い",choice_d:"三位一体の神を信仰する",answer:"C",category:"ユダヤ教"},
+      {id:12,question:"ユダヤ教の聖典として最も適切なものはどれか",choice_a:"クルアーン",choice_b:"ヴェーダ",choice_c:"旧約聖書（ヘブライ語）",choice_d:"新約聖書",answer:"C",category:"ユダヤ教"},
+      {id:13,question:"ユダヤ教の聖典の呼称として不適切なものはどれか",choice_a:"トーラー",choice_b:"ヘブライ聖書",choice_c:"旧約聖書",choice_d:"新約聖書",answer:"D",category:"ユダヤ教"},
+      {id:14,question:"ユダヤ教における安息日を指すヘブライ語として正しいものはどれか",choice_a:"ラマダーン",choice_b:"シャバット",choice_c:"ペンテコステ",choice_d:"サバ",answer:"B",category:"ユダヤ教"},
+      {id:15,question:"キリスト教におけるイコンの説明として不適切なものはどれか",choice_a:"正教会で特に重視される宗教的図像である",choice_b:"信仰の対象そのものとして神と同一視される",choice_c:"礼拝や信仰の補助として用いられる",choice_d:"主にイエスや聖人が描かれる",answer:"B",category:"キリスト教"},
+      {id:16,question:"キリスト教における「三位一体」の説明として正しいものはどれか",choice_a:"神・人間・自然の三要素",choice_b:"父・子・聖霊が同一の神である",choice_c:"三人の異なる神が存在する",choice_d:"神と預言者と天使の関係",answer:"B",category:"キリスト教"},
+      {id:17,question:"カトリック教会の特徴として正しいものはどれか",choice_a:"教皇を認めない",choice_b:"イコン崇拝を重視する",choice_c:"ローマ教皇を最高権威とする",choice_d:"聖書のみを信仰の基準とする",answer:"C",category:"キリスト教"},
+      {id:18,question:"正教会に関する説明として正しいものはどれか",choice_a:"プロテスタントの一派である",choice_b:"ロシアを中心に広がっている",choice_c:"教皇を頂点とする組織をもつ",choice_d:"新約聖書を用いない",answer:"B",category:"キリスト教"},
+      {id:19,question:"プロテスタントに共通する特徴として最も適切なものはどれか",choice_a:"教皇の権威を認める",choice_b:"儀礼と聖職者を重視する",choice_c:"聖書を信仰の唯一の基準とする",choice_d:"イコンを用いた礼拝を行う",answer:"C",category:"キリスト教"},
+      {id:20,question:"旧約聖書・新約聖書における「約（やく）」の意味として最も適切なものはどれか",choice_a:"神と人間との間の契約",choice_b:"神が人間に与えた戒律の総称",choice_c:"神話的な象徴表現",choice_d:"未来の終末に関する予言",answer:"A",category:"キリスト教"},
+      {id:21,question:"福音書の説明としてふさわしくないものはどれか",choice_a:"イエスの生と教えを記した文書である",choice_b:"新約聖書に含まれる",choice_c:"モーセの律法を中心に構成されている",choice_d:"マタイ・マルコ・ルカ・ヨハネの四書がある",answer:"C",category:"キリスト教"},
+      {id:22,question:"ペンテコステの説明として最も適切なものはどれか",choice_a:"イエスが誕生した日",choice_b:"聖霊が弟子たちに降臨した出来事",choice_c:"最後の晩餐を記念する祭日",choice_d:"イエスが処刑された日",answer:"B",category:"キリスト教"},
+      {id:23,question:"イスラーム教の開祖として正しいものはどれか",choice_a:"モーセ",choice_b:"イエス",choice_c:"ムハンマド",choice_d:"ゴータマ・シッダールタ",answer:"C",category:"イスラーム"},
+      {id:24,question:"イスラームの聖典として正しいものはどれか",choice_a:"トーラー",choice_b:"クルアーン",choice_c:"アヴェスター",choice_d:"新約聖書",answer:"B",category:"イスラーム"},
+      {id:25,question:"現在、世界最大のムスリム人口を持つ国として正しいものはどれか",choice_a:"サウジアラビア",choice_b:"イラン",choice_c:"インドネシア",choice_d:"エジプト",answer:"C",category:"イスラーム"},
+      {id:26,question:"イスラーム教の五行に含まれないものはどれか",choice_a:"信仰告白",choice_b:"喜捨",choice_c:"巡礼",choice_d:"洗礼",answer:"D",category:"イスラーム"},
+      {id:27,question:"イスラーム教の六信に含まれないものはどれか",choice_a:"神への信仰",choice_b:"天使への信仰",choice_c:"来世への信仰",choice_d:"輪廻転生への信仰",answer:"D",category:"イスラーム"},
+      {id:28,question:"スンニ派とシーア派の違いとして最も適切なものはどれか",choice_a:"神の数の違い",choice_b:"聖典の違い",choice_c:"ムハンマド後継者の考え方",choice_d:"五行の内容の違い",answer:"C",category:"イスラーム"},
+      {id:29,question:"ヒンドゥー教について正しいものはどれか",choice_a:"開祖が明確に存在する",choice_b:"唯一神信仰である",choice_c:"ヴェーダを聖典とする",choice_d:"輪廻転生を否定する",answer:"C",category:"ヒンドゥー教"},
+      {id:30,question:"ヒンドゥー教における三大神の組み合わせとして正しいものはどれか",choice_a:"ブラフマー・ヴィシュヌ・シヴァ",choice_b:"ヤハウェ・アッラー・ブラフマン",choice_c:"イエス・ムハンマド・モーセ",choice_d:"天照大神・須佐之男・月読命",answer:"A",category:"ヒンドゥー教"},
+      {id:31,question:"ヒンドゥー教の前身となった宗教は何か",choice_a:"ジャイナ教",choice_b:"シク教",choice_c:"バラモン教",choice_d:"ゾロアスター教",answer:"C",category:"ヒンドゥー教"},
+      {id:32,question:"ヴァルナ制における「バラモン」の役割として正しいものはどれか",choice_a:"王族と武士",choice_b:"祭司",choice_c:"庶民",choice_d:"隷属民",answer:"B",category:"ヒンドゥー教"},
+      {id:33,question:"ヒンドゥー教の「トリムールティ（三神一体）」に含まれない神はどれか",choice_a:"ブラフマー",choice_b:"ヴィシュヌ",choice_c:"シヴァ",choice_d:"ガネーシャ",answer:"D",category:"ヒンドゥー教"},
+      {id:34,question:"インドで最も信者数が多い宗教と成人人口に占める割合の組み合わせとして正しいものはどれか",choice_a:"イスラム教 - 約80%",choice_b:"ヒンドゥー教 - 約80%",choice_c:"仏教 - 約60%",choice_d:"シク教 - 約50%",answer:"B",category:"ヒンドゥー教"},
+      {id:35,question:"『ラーマーヤナ』の主人公であるラーマ王子はどの神の化身とされているか",choice_a:"ブラフマー",choice_b:"シヴァ",choice_c:"ヴィシュヌ",choice_d:"ガネーシャ",answer:"C",category:"ヒンドゥー教"},
+      {id:36,question:"「梵我一如」の概念において「梵（ブラフマン）」と「我（アートマン）」はそれぞれ何を指すか",choice_a:"梵＝個体原理、我＝宇宙原理",choice_b:"梵＝宇宙原理、我＝個体原理",choice_c:"梵＝輪廻、我＝解脱",choice_d:"梵＝破壊、我＝創造",answer:"B",category:"ヒンドゥー教"},
+      {id:37,question:"ヒンドゥー教徒が神聖視しその肉を食べない動物はどれか",choice_a:"豚",choice_b:"羊",choice_c:"牛",choice_d:"鶏",answer:"C",category:"ヒンドゥー教"},
+      {id:38,question:"2006年までヒンドゥー教を国教としていた唯一の国はどこか",choice_a:"インド",choice_b:"ネパール",choice_c:"バングラデシュ",choice_d:"スリランカ",answer:"B",category:"ヒンドゥー教"},
+      {id:39,question:"バラモン教の基盤となった民族として正しいものはどれか",choice_a:"ドラヴィダ人",choice_b:"アーリア人",choice_c:"モンゴル人",choice_d:"ペルシア人",answer:"B",category:"ヒンドゥー教"},
+      {id:40,question:"シヴァ神の特徴として正しいものはどれか",choice_a:"四つの顔を持ち壺や聖典を持つ",choice_b:"手に円盤やほら貝などの武器を持つ",choice_c:"三つ目で頭上に月と蛇がある",choice_d:"象の頭を持つ",answer:"C",category:"ヒンドゥー教"},
+      {id:41,question:"仏教の開祖として正しいものはどれか",choice_a:"マハーヴィーラ",choice_b:"ゴータマ・シッダールタ",choice_c:"アショーカ王",choice_d:"孔子",answer:"B",category:"仏教"},
+      {id:42,question:"仏教の基本的な目的として最も適切なものはどれか",choice_a:"神への服従",choice_b:"現世利益の追求",choice_c:"苦からの解脱",choice_d:"国家の安定",answer:"C",category:"仏教"},
+      {id:43,question:"上座仏教と大乗仏教の違いとして正しいものはどれか",choice_a:"経典の言語",choice_b:"神の有無",choice_c:"救済対象の範囲",choice_d:"出家制度の有無",answer:"C",category:"仏教"},
+      {id:44,question:"仏陀（ゴータマ・シッダールタ）の死を表す語として最も適切なものはどれか",choice_a:"入滅",choice_b:"解脱",choice_c:"般涅槃",choice_d:"成道",answer:"C",category:"仏教"},
+      {id:45,question:"四諦の内容として正しい組み合わせはどれか",choice_a:"苦・集・滅・道",choice_b:"生・老・病・死",choice_c:"無常・苦・無我・空",choice_d:"正見・正思・正語・正業",answer:"A",category:"仏教"},
+      {id:46,question:"三法印に含まれないものはどれか",choice_a:"無常",choice_b:"無我",choice_c:"苦",choice_d:"常楽我浄",answer:"D",category:"仏教"},
+      {id:47,question:"仏教における三種類の仏典の正しい組み合わせはどれか",choice_a:"経・律・論",choice_b:"聖書・律法・福音",choice_c:"詩・預言・歴史",choice_d:"教義・戒律・神話",answer:"A",category:"仏教"},
+      {id:48,question:"仏教の開祖ゴータマ・シッダールタが生きていたのは何世紀頃か",choice_a:"紀元前1〜2世紀",choice_b:"紀元前5〜6世紀",choice_c:"紀元後1〜2世紀",choice_d:"紀元後5〜6世紀",answer:"B",category:"仏教"},
+      {id:49,question:"「仏陀（ブッダ）」というサンスクリット語の意味として正しいものはどれか",choice_a:"救済者・導く者",choice_b:"目覚めた者・悟った者",choice_c:"創造者・支配する者",choice_d:"修行者・苦行する者",answer:"B",category:"仏教"},
+      {id:50,question:"ブッダが出家を決意するきっかけとなった経験を表す四字熟語はどれか",choice_a:"四苦八苦",choice_b:"因果応報",choice_c:"四門出遊",choice_d:"諸行無常",answer:"C",category:"仏教"},
+      {id:51,question:"ブッダが悟りを開いた場所とその時に座っていた木の組み合わせとして正しいものはどれか",choice_a:"サールナート・沙羅双樹",choice_b:"ブッダガヤー・菩提樹",choice_c:"ルンビニー・菩提樹",choice_d:"クシナガラ・沙羅双樹",answer:"B",category:"仏教"},
+      {id:52,question:"「四諦」のうち苦しみの根源は煩悩と欲望であるという真理を何というか",choice_a:"苦諦",choice_b:"集諦",choice_c:"滅諦",choice_d:"道諦",answer:"B",category:"仏教"},
+      {id:53,question:"仏典の総称である「三蔵」に含まれないものはどれか",choice_a:"律（ヴィナヤ）",choice_b:"経（スートラ）",choice_c:"論（アビダルマ）",choice_d:"讃（ストートラ）",answer:"D",category:"仏教"},
+      {id:54,question:"上座部仏教の特徴として正しいものはどれか",choice_a:"漢訳仏典を使用し東アジアに広がった",choice_b:"パーリ語の聖典を使用し東南アジアに広がった",choice_c:"チベット語聖典を使用しモンゴルに広がった",choice_d:"サンスクリット語聖典を使用し中央アジアに広がった",answer:"B",category:"仏教"},
+      {id:55,question:"大乗仏教の特徴として正しいものはどれか",choice_a:"修行者のみが悟りを得られる",choice_b:"寺院での崇拝対象は釈迦のみである",choice_c:"出家者・在家者を問わずすべての人が悟りを得られる",choice_d:"自分の悟りのみを目指す修行を重視する",answer:"C",category:"仏教"},
+      {id:56,question:"チベット仏教の特徴として正しいものはどれか",choice_a:"仏教（特に密教）と土着宗教（ボン教）の混合",choice_b:"パーリ語の聖典のみを使用",choice_c:"転生の概念を否定している",choice_d:"バラモン教の儀礼をそのまま継承している",answer:"A",category:"仏教"},
+      {id:57,question:"ブッダが最初の説法（初転法輪）を行った場所はどこか",choice_a:"ルンビニー",choice_b:"ブッダガヤー",choice_c:"サールナート（鹿野苑）",choice_d:"クシナガラ",answer:"C",category:"仏教"},
+      {id:58,question:"「三法印」に含まれないものはどれか",choice_a:"諸行無常",choice_b:"諸法無我",choice_c:"涅槃寂静",choice_d:"因果応報",answer:"D",category:"仏教"},
+      {id:59,question:"17世紀からチベット仏教の指導者となっている人物の称号はどれか",choice_a:"法王",choice_b:"ダライ・ラマ",choice_c:"大僧正",choice_d:"カリフ",answer:"B",category:"仏教"},
+      {id:60,question:"ブッダが亡くなった（入滅した）場所はどこか",choice_a:"ルンビニー",choice_b:"ブッダガヤー",choice_c:"サールナート",choice_d:"クシナガラ",answer:"D",category:"仏教"},
+      {id:61,question:"仏教が目指す最終的な目標は何か",choice_a:"輪廻の継続",choice_b:"解脱（輪廻からの脱出）",choice_c:"バラモンになること",choice_d:"王族への転生",answer:"B",category:"仏教"},
+      {id:62,question:"神道について正しいものはどれか",choice_a:"開祖と明確な教典をもつ",choice_b:"唯一神信仰である",choice_c:"自然や祖先を神として崇拝する",choice_d:"輪廻転生を中心教義とする",answer:"C",category:"神道"},
+      {id:63,question:"神道の起源について正しい記述はどれか",choice_a:"孔子が開祖である",choice_b:"特定の開祖はなく自然発生的に成立した",choice_c:"仏教伝来後に新しく創設された",choice_d:"キリスト教の影響を受けて成立した",answer:"B",category:"神道"},
+      {id:64,question:"神道において神（カミ）が宿る媒介物を何というか",choice_a:"御神体",choice_b:"依代",choice_c:"本地仏",choice_d:"神宮寺",answer:"B",category:"神道"},
+      {id:65,question:"神社の基本構造においてご神体が安置される場所を何というか",choice_a:"拝殿",choice_b:"本殿",choice_c:"神楽殿",choice_d:"鳥居",answer:"B",category:"神道"},
+      {id:66,question:"伊勢神宮で20年に1度行われる神社を建て替える行事を何というか",choice_a:"遷宮",choice_b:"神幸祭",choice_c:"例大祭",choice_d:"祈年祭",answer:"A",category:"神道"},
+      {id:67,question:"記紀神話を構成する2つの書物の組み合わせとして正しいものはどれか",choice_a:"『万葉集』と『風土記』",choice_b:"『古事記』と『日本書紀』",choice_c:"『源氏物語』と『枕草子』",choice_d:"『延喜式』と『令義解』",answer:"B",category:"神道"},
+      {id:68,question:"廃仏毀釈が行われた時期として正しいものはどれか",choice_a:"奈良時代",choice_b:"平安時代",choice_c:"鎌倉時代",choice_d:"明治時代",answer:"D",category:"神道"},
+      {id:69,question:"「神」への考え方として仏教に最も近いものはどれか",choice_a:"人格神への絶対的信仰",choice_b:"創造神の存在を前提とする",choice_c:"神の存在を教義の中心に置かない",choice_d:"民族神を崇拝する",answer:"C",category:"日本仏教の宗派"},
+      {id:70,question:"密教的儀礼を重視する宗派の組み合わせとして正しいものはどれか",choice_a:"浄土宗と浄土真宗",choice_b:"天台宗と真言宗",choice_c:"曹洞宗と臨済宗",choice_d:"日蓮宗と法華宗",answer:"B",category:"日本仏教の宗派"},
+      {id:71,question:"坐禅と公案（修行者の悟りを導く問答）を重視する禅宗の宗派の組み合わせとして正しいものはどれか",choice_a:"天台宗と真言宗",choice_b:"浄土宗と浄土真宗",choice_c:"曹洞宗と臨済宗",choice_d:"日蓮宗と時宗",answer:"C",category:"日本仏教の宗派"},
+      {id:72,question:"「南無阿弥陀仏」と念仏を唱えて極楽往生を目指す宗派の組み合わせとして正しいものはどれか",choice_a:"曹洞宗と臨済宗",choice_b:"天台宗と真言宗",choice_c:"浄土宗と浄土真宗",choice_d:"日蓮宗と法華宗",answer:"C",category:"日本仏教の宗派"},
+      {id:73,question:"「南無妙法蓮華経」とお題目を唱え国家との結びつきを重視する宗派はどれか",choice_a:"浄土宗",choice_b:"真言宗",choice_c:"曹洞宗",choice_d:"日蓮宗",answer:"D",category:"日本仏教の宗派"},
+      {id:74,question:"真言宗の開祖と総本山の組み合わせとして正しいものはどれか",choice_a:"最澄 - 比叡山延暦寺",choice_b:"空海 - 高野山金剛峯寺",choice_c:"法然 - 知恩院",choice_d:"親鸞 - 西本願寺",answer:"B",category:"日本仏教の宗派"},
+      {id:75,question:"神仏習合とは何を指すか",choice_a:"神道を廃止し仏教を国教とすること",choice_b:"神と仏を同一視・融合する考え方",choice_c:"神道と仏教を厳密に分離する政策",choice_d:"神道が仏教を排除する運動",answer:"B",category:"神仏習合・分離"},
+      {id:76,question:"6世紀に仏像や経典を日本に送った国はどこか",choice_a:"中国（唐）",choice_b:"百済",choice_c:"新羅",choice_d:"高句麗",answer:"B",category:"神仏習合・分離"},
+      {id:77,question:"8世紀初頭神のために神社に付属して建てられた寺院を何というか",choice_a:"本山",choice_b:"末寺",choice_c:"神宮寺",choice_d:"菩提寺",answer:"C",category:"神仏習合・分離"},
+      {id:78,question:"仏・菩薩が人々を救済するために「神」の姿として現れるという10世紀に広まった思想を何というか",choice_a:"神仏習合",choice_b:"本地垂迹",choice_c:"廃仏毀釈",choice_d:"神仏分離",answer:"B",category:"神仏習合・分離"},
+      {id:79,question:"江戸時代中期に盛んになり神仏習合していない神道本来の姿を追求した学問は何か",choice_a:"蘭学",choice_b:"儒学",choice_c:"国学",choice_d:"洋学",answer:"C",category:"神仏習合・分離"},
+      {id:80,question:"1868年に明治政府が発した仏教色を排除し神仏分離を進める政策は何か",choice_a:"禁教令",choice_b:"神仏判然令",choice_c:"伴天連追放令",choice_d:"宗門改制度",answer:"B",category:"神仏習合・分離"},
+      {id:81,question:"神仏分離令の結果政府の意図に反して起こった仏教排斥運動を何というか",choice_a:"廃仏毀釈",choice_b:"島原の乱",choice_c:"本地垂迹",choice_d:"神仏習合",answer:"A",category:"神仏習合・分離"},
+      {id:82,question:"1549年に日本に上陸し薩摩で伝道を行ったイエズス会の宣教師は誰か",choice_a:"ルイス・フロイス",choice_b:"フランシスコ・ザビエル",choice_c:"ヴァリニャーノ",choice_d:"オルガンティーノ",answer:"B",category:"キリスト教伝来"},
+      {id:83,question:"1587年にキリスト教宣教師の国外追放を命じた法令を発したのは誰か",choice_a:"織田信長",choice_b:"豊臣秀吉",choice_c:"徳川家康",choice_d:"徳川家光",answer:"B",category:"キリスト教伝来"},
+      {id:84,question:"1629年から長崎でキリスト教信者を摘発するために用いられた方法は何か",choice_a:"宗門改",choice_b:"踏み絵",choice_c:"檀家制度",choice_d:"本末制度",answer:"B",category:"キリスト教伝来"},
+      {id:85,question:"檀家制度の説明として最も適切なものはどれか",choice_a:"神社と地域住民の関係を制度化したものである",choice_b:"仏教寺院と信徒（家）との間の帰属関係を定めた制度である",choice_c:"国家が僧侶を直接管理するための制度である",choice_d:"宗派間の対立を調停するために設けられた制度である",answer:"B",category:"檀家制度"},
+      {id:86,question:"檀家制度が全国的に確立した主な歴史的背景として正しいものはどれか",choice_a:"平安時代の仏教文化の発展",choice_b:"鎌倉仏教による民衆布教の拡大",choice_c:"江戸時代におけるキリスト教禁制政策",choice_d:"明治時代の神仏分離政策",answer:"C",category:"檀家制度"},
+      {id:87,question:"檀家制度の機能として適切でないものはどれか",choice_a:"寺院の経済的基盤の維持",choice_b:"葬儀や先祖供養を通じた仏教の定着",choice_c:"キリスト教信者の摘発と監視",choice_d:"仏教教義の体系的教育の義務化",answer:"D",category:"檀家制度"},
+      {id:88,question:"檀家制度において寺院が特定の家に対して永続的に担当する役割として正しいものはどれか",choice_a:"政治的助言",choice_b:"葬祭・供養・法事",choice_c:"軍事的保護",choice_d:"経済的投資",answer:"B",category:"檀家制度"},
+      {id:89,question:"キリスト教徒ではないことを証明するため必ず寺院の檀家になることを求めた制度は何か",choice_a:"本末制度",choice_b:"宗門改制度",choice_c:"神仏判然令",choice_d:"禁教令",answer:"B",category:"檀家制度"},
+      {id:90,question:"仏教各宗の寺院を本山から末寺までピラミッド構造で編成した江戸幕府の統制制度は何か",choice_a:"檀家制度",choice_b:"宗門改制度",choice_c:"本末制度",choice_d:"寺社奉行制度",answer:"C",category:"檀家制度"},
+      {id:91,question:"檀家制度の広がりによって仏教が葬儀と深く結びついたことを仏教史学者の圭室諦成は何と称したか",choice_a:"鎌倉仏教",choice_b:"葬式仏教",choice_c:"国家仏教",choice_d:"民衆仏教",answer:"B",category:"檀家制度"},
+      {id:92,question:"近世後期から幕末維新期に民衆の間に現れた新宗教に含まれないものはどれか",choice_a:"天理教",choice_b:"金光教",choice_c:"真言宗",choice_d:"黒住教",answer:"C",category:"新宗教"},
+      {id:93,question:"東アジアで祖先崇拝（先祖祭祀）が広く見られる地域の組み合わせとして正しいものはどれか",choice_a:"インドと中東",choice_b:"東アジアと東南アジア",choice_c:"ヨーロッパとアフリカ",choice_d:"南米とオセアニア",answer:"B",category:"新宗教"},
+      {id:94,question:"ユダヤ教・キリスト教・イスラームに共通する特徴として正しいものはどれか",choice_a:"多神信仰",choice_b:"輪廻転生",choice_c:"唯一神信仰",choice_d:"自然神崇拝",answer:"C",category:"複合問題"},
+      {id:95,question:"ユダヤ教・キリスト教・イスラームの三宗教に共通しヒンドゥー教・仏教・神道には当てはまらない特徴として正しいものはどれか",choice_a:"輪廻転生を説く",choice_b:"唯一神との契約を重視する",choice_c:"多神的世界観をもつ",choice_d:"自然物を神格化する",answer:"B",category:"複合問題"},
+      {id:96,question:"次の組み合わせのうち対応が正しいものはどれか",choice_a:"クルアーン ― キリスト教",choice_b:"ヴェーダ ― 仏教",choice_c:"旧約聖書 ― ユダヤ教",choice_d:"福音書 ― イスラーム",answer:"C",category:"複合問題"},
+      {id:97,question:"「開祖が明確に存在しない宗教」の組み合わせとして正しいものはどれか",choice_a:"ユダヤ教・ヒンドゥー教",choice_b:"キリスト教・仏教",choice_c:"イスラーム・神道",choice_d:"仏教・キリスト教",answer:"A",category:"複合問題"},
+      {id:98,question:"戒律や生活規範が食文化と強く結びついている宗教の組み合わせはどれか",choice_a:"仏教・神道",choice_b:"ユダヤ教・イスラーム",choice_c:"キリスト教・仏教",choice_d:"ヒンドゥー教・神道",answer:"B",category:"複合問題"},
+      {id:99,question:"宗教とその「死後観・解脱観」の対応として正しいものはどれか",choice_a:"仏教 ― 最終審判",choice_b:"キリスト教 ― 輪廻転生",choice_c:"イスラーム ― 来世での裁き",choice_d:"神道 ― 般涅槃",answer:"C",category:"複合問題"},
+      {id:100,question:"「神」という概念の扱いについて最も適切な組み合わせはどれか",choice_a:"仏教 ― 創造神を中心に据える",choice_b:"神道 ― 人格的唯一神を信仰する",choice_c:"キリスト教 ― 三位一体の唯一神",choice_d:"ヒンドゥー教 ― 神の存在を否定する",answer:"C",category:"複合問題"},
+      {id:101,question:"宗派区分と宗教の対応として正しいものはどれか",choice_a:"スンニ派・シーア派 ― キリスト教",choice_b:"大乗仏教・上座仏教 ― 仏教",choice_c:"カトリック・正教会 ― イスラーム",choice_d:"プロテスタント・ヒンドゥー教",answer:"B",category:"複合問題"},
+      {id:102,question:"日本の宗教文化の特徴として仏教・神道の双方に関わる概念として正しいものはどれか",choice_a:"輪廻転生の否定",choice_b:"神仏習合",choice_c:"唯一神信仰",choice_d:"五行の実践",answer:"B",category:"複合問題"},
+      {id:103,question:"「民族宗教」としての性格が最も強いものはどれか",choice_a:"キリスト教",choice_b:"イスラーム",choice_c:"ユダヤ教",choice_d:"仏教",answer:"C",category:"複合問題"},
+      {id:104,question:"1970年代の日本におけるオカルトブームのきっかけとなった1974年に日本で上映されたアメリカ映画はどれか",choice_a:"ゴーストバスターズ",choice_b:"エクソシスト",choice_c:"オーメン",choice_d:"シャイニング",answer:"B",category:"オカルト・スピリチュアリティ"},
+      {id:105,question:"1974年に来日しテレビ番組でスプーン曲げを披露して超能力ブームを引き起こした人物は誰か",choice_a:"エドガー・ケイシー",choice_b:"ユリ・ゲラー",choice_c:"ノストラダムス",choice_d:"ダニオン・ブリンクリー",answer:"B",category:"オカルト・スピリチュアリティ"},
+      {id:106,question:"西山茂が1970年代以降の日本の宗教状況を表現するために用いた近代合理主義の価値観による支配が終わりつつあることを示す概念はどれか",choice_a:"宗教の私事化",choice_b:"脱私事化",choice_c:"非合理的復権",choice_d:"世俗化",answer:"C",category:"オカルト・スピリチュアリティ"},
+      {id:107,question:"1995年に発生し日本のオカルトブームに終止符を打つきっかけとなった事件はどれか",choice_a:"阪神・淡路大震災",choice_b:"地下鉄サリン事件",choice_c:"統一教会問題",choice_d:"尼崎連続変死事件",answer:"B",category:"オカルト・スピリチュアリティ"},
+      {id:108,question:"1990年代後半から2000年代前半の日本における「スピリチュアリティ」の特徴として最も適切なものはどれか",choice_a:"意識変容による自己超越を目指す",choice_b:"「宗教」や「霊」を想起させない用語として普及した",choice_c:"組織宗教への帰属を重視する",choice_d:"科学的合理性に基づく世界観を提唱する",answer:"B",category:"オカルト・スピリチュアリティ"},
+      {id:109,question:"ピーター・バーガーが『聖なる天蓋』で定義した「世俗化」の説明として最も適切なものはどれか",choice_a:"宗教が政治権力と結びついて国家を支配するプロセス",choice_b:"社会や文化のさまざまな領域が宗教の制度や象徴による支配から離れていくプロセス",choice_c:"宗教が消費社会において商品化されていくプロセス",choice_d:"宗教が科学技術の発展によって証明されていくプロセス",answer:"B",category:"世俗化・公共宗教"},
+      {id:110,question:"従来の世俗化理論において近代化に伴い宗教が公的領域から退き個人の内面的な信仰に限定されていく現象を何と呼ぶか",choice_a:"公共宗教",choice_b:"脱私事化",choice_c:"宗教の私事化",choice_d:"非合理的復権",answer:"C",category:"世俗化・公共宗教"},
+      {id:111,question:"ホセ・カサノヴァが提唱した概念で1980年代以降宗教が私的領域を踏み越えて公的領域において役割を果たすことを主張し始める現象を何と呼ぶか",choice_a:"世俗化",choice_b:"宗教の私事化",choice_c:"脱私事化",choice_d:"宗教の商品化",answer:"C",category:"世俗化・公共宗教"},
+      {id:112,question:"ジル・ケペルが『宗教の復讐』で指摘した1970年代後半に宗教が公的な場面に戻るきっかけとなった世界的出来事に含まれないものはどれか",choice_a:"1977年 ベギン内閣（イスラエル）",choice_b:"1978年 教皇ヨハネ・パウロ2世就任（バチカン）",choice_c:"1979年 イラン・イスラーム革命",choice_d:"1989年 ベルリンの壁崩壊",answer:"D",category:"世俗化・公共宗教"},
+      {id:113,question:"イスラームにおいて頭と首を覆うスカーフを指しアラビア語で「覆うもの」を意味する言葉はどれか",choice_a:"ブルカ",choice_b:"ニカブ",choice_c:"ヒジャブ",choice_d:"チャドル",answer:"C",category:"ヒジャブ・イラン・ライシテ"},
+      {id:114,question:"1979年のイラン・イスラーム革命を指導しイスラーム法による統治を主張したシーア派法学者は誰か",choice_a:"ハメネイ",choice_b:"ホメイニー",choice_c:"サダト",choice_d:"ナセル",answer:"B",category:"ヒジャブ・イラン・ライシテ"},
+      {id:115,question:"イラン・イスラーム革命以前のパフラヴィー朝の政策として正しいものはどれか",choice_a:"ヴェール着用の義務化",choice_b:"脱イスラームによる西欧化政策",choice_c:"シーア派ウラマーの政治参加促進",choice_d:"イスラーム法の厳格な適用",answer:"B",category:"ヒジャブ・イラン・ライシテ"},
+      {id:116,question:"2022年にイランで発生した不適切なヒジャブの着用を理由に警察に連行された後に死亡し大規模な反政府デモのきっかけとなった女性は誰か",choice_a:"マララ・ユスフザイ",choice_b:"マフサ・アミニ",choice_c:"シリン・エバディ",choice_d:"ナスリン・ソトゥーデ",answer:"B",category:"ヒジャブ・イラン・ライシテ"},
+      {id:117,question:"フランスにおける「ライシテ」の説明として最も適切なものはどれか",choice_a:"国家がカトリック教会を公式に支援する制度",choice_b:"政治権力を宗教から自律させ宗教的自由を保障する制度",choice_c:"イスラーム教徒の移民を積極的に受け入れる政策",choice_d:"宗教教育を公立学校で義務化する制度",answer:"B",category:"ヒジャブ・イラン・ライシテ"},
+      {id:118,question:"2004年にフランスで制定された公立学校における宗教的標章の着用を規制する法律の対象に含まれないものはどれか",choice_a:"大きな十字架（キリスト教）",choice_b:"キッパ（ユダヤ教）",choice_c:"ヒジャブ（イスラーム）",choice_d:"小さなメダル（キリスト教）",answer:"D",category:"ヒジャブ・イラン・ライシテ"},
+      {id:119,question:"イランとフランスのヴェール政策の比較として正しいものはどれか",choice_a:"両国ともヴェールの着用を義務化している",choice_b:"イランは着用を義務化しフランスは公的空間での着用を制限している",choice_c:"両国ともヴェールの着用を禁止している",choice_d:"イランは着用を禁止しフランスは着用を奨励している",answer:"B",category:"ヒジャブ・イラン・ライシテ"},
+      {id:120,question:"シーア派のウラマー（イスラーム法学者）の位階制において最高権威を示す呼称はどれか",choice_a:"イマーム",choice_b:"ムフティー",choice_c:"大アーヤトッラー",choice_d:"カリフ",answer:"C",category:"ヒジャブ・イラン・ライシテ"},
+      {id:121,question:"井上順孝が提唱した「ハイパー宗教」の特徴として最も適切なものはどれか",choice_a:"伝統的な教団組織への帰属を重視する",choice_b:"さまざまな宗教伝統から要素を取り出して自由に組み合わせる",choice_c:"科学的合理性に基づいて宗教を否定する",choice_d:"国家権力と宗教が一体化する",answer:"B",category:"ヒジャブ・イラン・ライシテ"},
+      {id:122,question:"「カルト」という語の語源について正しいものを選びなさい",choice_a:"ギリシア語の「秘密」を意味する語に由来する",choice_b:"ラテン語の「儀礼・祭祀」を意味する語に由来する",choice_c:"ヘブライ語の「異端」を意味する語に由来する",choice_d:"英語の「崇拝」を意味する語から造られた新語である",answer:"B",category:"カルト問題"},
+      {id:123,question:"1970年代以降アメリカで「破壊的カルト」という意味で「カルト」という語を広めたのは主にどのような立場の人々か",choice_a:"宗教学の研究者",choice_b:"保守的福音派のキリスト教徒",choice_c:"反カルト運動家や脱会カウンセラー",choice_d:"政府の宗教政策担当者",answer:"C",category:"カルト問題"},
+      {id:124,question:"「マインドコントロール」と「回心」の説明として最も適切なものを選びなさい",choice_a:"どちらも本人の自主性を重視した視点である",choice_b:"マインドコントロールは本人の意識変化を重視し回心は外部からの強制を重視する",choice_c:"マインドコントロールは外部からの強制的影響を強調し回心は本人の宗教経験や意識変化を重視する",choice_d:"どちらも価値中立的な学術用語として広く使用されている",answer:"C",category:"カルト問題"},
+      {id:125,question:"回心（conversion）の説明として正しいものを選びなさい",choice_a:"組織側の認知的枠組みを強制的に押し付けられる過程",choice_b:"啓示や悟りといった宗教経験を境に人格や生活様式が根本から変化する過程",choice_c:"脱会カウンセラーによって信仰を放棄させられる過程",choice_d:"社会心理学的な説得技法によって入信させられる過程",answer:"B",category:"カルト問題"},
+      {id:126,question:"櫻井義秀が述べる「社会的相当性」の説明として正しいものを選びなさい",choice_a:"宗教団体が法的に認められるための普遍的・絶対的な基準",choice_b:"人権や社会権によって期待されるべき規範や妥当性の基準であり時代に応じて変化する",choice_c:"宗教学者が定めた学術的な分類基準",choice_d:"国家が宗教団体を統制するための法律上の要件",answer:"B",category:"カルト問題"},
+      {id:127,question:"オウム真理教における「慈悲殺」の論理として正しいものを選びなさい",choice_a:"信者の修行の一環として動物を殺して供養する行為",choice_b:"悪人が悪を犯す前に命を絶つことでその人を救済するという考え",choice_c:"病気で苦しむ信者を安楽死させる行為",choice_d:"敵対する宗教団体を攻撃することで世界を浄化するという思想",answer:"B",category:"カルト問題"},
+      {id:128,question:"中村生雄が提唱した「供犠の文化」の特徴として正しいものを選びなさい",choice_a:"殺した動物の霊を弔い定期的に浄化しようとする文化",choice_b:"動物を神の賜物とみなし神への返礼として捧げる文化",choice_c:"人と神の連続性を前提とし共食を重視する文化",choice_d:"仏教の不殺生理念に基づき動物を放つ文化",answer:"B",category:"供犠・動物倫理"},
+      {id:129,question:"「供養の文化」の特徴として正しいものを選びなさい",choice_a:"創造神を持つ一神教圏で発達した",choice_b:"犠牲獣を完全に焼き尽くして神に捧げる",choice_c:"殺した動物の霊を弔い罪を定期的に確認しながら浄化しようとする",choice_d:"人と神の非連続性を前提とする",answer:"C",category:"供犠・動物倫理"},
+      {id:130,question:"ユダヤ教の「全焼の供犠（燔祭、ホロコースト）」の説明として正しいものを選びなさい",choice_a:"犠牲獣の肉を神と人間が分け合って食べる儀式",choice_b:"犠牲獣を野に放って命を救う儀式",choice_c:"犠牲獣の全体が祭壇で焼き尽くされ骨と灰しか残らない儀式",choice_d:"犠牲獣の血を大地に撒いて豊穣を祈る儀式",answer:"C",category:"供犠・動物倫理"},
+      {id:131,question:"聖書（創世記）における人間と動物の関係の説明として正しいものを選びなさい",choice_a:"人間と動物は平等な存在として創造された",choice_b:"動物は人間の祖先として敬われるべき存在である",choice_c:"人間は神にかたどって創造され動物を支配する存在とされた",choice_d:"人間は動物から進化した存在として描かれている",answer:"C",category:"供犠・動物倫理"},
+      {id:132,question:"「アニマルライツ（動物権）」の立場として正しいものを選びなさい",choice_a:"人間による動物の利用を認めるが苦痛を減らすべきとする",choice_b:"動物も人間と同等の権利を持ち食肉文化の徹底的な改革を目指す",choice_c:"動物の利用は栄養・環境・健康・行動・快適さの基準で判断すべきとする",choice_d:"伝統的な狩猟文化を維持しながら動物を保護すべきとする",answer:"B",category:"供犠・動物倫理"},
+      {id:133,question:"「アニマルウェルフェア（動物福祉）」の立場として正しいものを選びなさい",choice_a:"動物も人間と同等の権利を持つため一切の利用を禁止すべきとする",choice_b:"動物であることで命を侵害することは種の差別であるとする",choice_c:"人間による動物の利用を認めるがなるべくその苦痛を減らしていくべきとする",choice_d:"食肉文化（カーニズム）のシステムを徹底的に改革すべきとする",answer:"C",category:"供犠・動物倫理"},
+      {id:134,question:"「放生会」の説明として正しいものを選びなさい",choice_a:"動物を犠牲として神に捧げ焼き尽くす儀式",choice_b:"仏教の不殺生の戒めに基づき鳥や魚を野や海に放って命を救う法会",choice_c:"狩猟で得た獲物を神前に並べて感謝する祭り",choice_d:"死んだ動物の霊を慰めるために塚を建てる行事",answer:"B",category:"供犠・動物倫理"},
+      {id:135,question:"日本における実験動物供養について正しいものを選びなさい",choice_a:"明治時代に西洋から導入された習慣である",choice_b:"最も古い記録は1917年の九州帝国大学での動物祭である",choice_c:"仏教の教義で禁止されているため現在は行われていない",choice_d:"政府の法律によって義務付けられている",answer:"B",category:"供犠・動物倫理"},
+      {id:136,question:"1970年代以降英語圏を中心に動物倫理の議論が浮上した背景として授業で挙げられたものを選びなさい",choice_a:"宗教的な終末論の流行",choice_b:"J・S・ミルの功利主義の影響と人間と動物の境界線の再考",choice_c:"仏教の不殺生理念の世界的な普及",choice_d:"国際連合による動物保護条約の締結",answer:"B",category:"供犠・動物倫理"},
+      {id:137,question:"次の宗教と、その成立時期（おおよその世紀）の組み合わせとして正しいものはどれか",choice_a:"ユダヤ教 ― 紀元後1世紀ごろ",choice_b:"キリスト教 ― 紀元前5世紀ごろ",choice_c:"イスラーム ― 紀元後7世紀ごろ",choice_d:"仏教 ― 紀元後15世紀ごろ",answer:"C",category:"複合問題"},
+      {id:138,question:"次の宗教と、その成立時期（おおよその世紀）の組み合わせとして正しいものはどれか",choice_a:"ユダヤ教 ― 紀元後7世紀ごろ",choice_b:"キリスト教 ― 紀元後1世紀ごろ",choice_c:"イスラーム ― 紀元前5世紀ごろ",choice_d:"仏教 ― 紀元後15世紀ごろ",answer:"B",category:"複合問題"},
+      {id:139,question:"次の宗教と、その成立時期（おおよその世紀）の組み合わせとして正しいものはどれか",choice_a:"仏教 ― 紀元前5世紀ごろ",choice_b:"キリスト教 ― 紀元後7世紀ごろ",choice_c:"ユダヤ教 ― 紀元後1世紀ごろ",choice_d:"イスラーム ― 紀元前13世紀ごろ",answer:"A",category:"複合問題"},
+      {id:140,question:"次の宗教と、その成立時期（おおよその世紀）の組み合わせとして正しいものはどれか",choice_a:"ユダヤ教 ― 紀元前13世紀ごろ",choice_b:"仏教 ― 紀元後1世紀ごろ",choice_c:"キリスト教 ― 紀元前5世紀ごろ",choice_d:"イスラーム ― 紀元後15世紀ごろ",answer:"A",category:"複合問題"},
+      {id:141,question:"イスラーム法（シャリーア）の説明として最も適切なものはどれか",choice_a:"国家が制定した世俗的な成文法体系",choice_b:"クルアーンと預言者ムハンマドの言行に基づく宗教的規範",choice_c:"中世ヨーロッパの慣習法を基礎とする法体系",choice_d:"イスラーム教徒の信仰行為のみを規制する儀礼規則",answer:"B",category:"イスラーム"},
+      {id:142,question:"世界のムスリム全体に占めるスンニ派の割合として最も適切なものはどれか",choice_a:"約10％",choice_b:"約15％",choice_c:"約80％",choice_d:"約90％",answer:"D",category:"イスラーム"},
+      {id:143,question:"イラン国内のムスリム全体に占めるシーア派の割合として最も適切なものはどれか",choice_a:"約10％",choice_b:"約15％",choice_c:"約80％",choice_d:"約90％",answer:"D",category:"イスラーム"}    
+    ];
 
-/* ======================
-   Quiz Data
-====================== */
-const quizData = [
-  {id:1,question:"世界中で宗教人口が最も多い宗教はどれか",choice_a:"キリスト教",choice_b:"イスラーム",choice_c:"ヒンドゥー教",choice_d:"仏教",answer:"A",category:"世界宗教統計"},
-  {id:2,question:"世界中のキリスト教徒の人口として正しいものはどれか",choice_a:"約10.3億人",choice_b:"約15.9億人",choice_c:"約21.6億人",choice_d:"約4.9億人",answer:"C",category:"世界宗教統計"},
-  {id:3,question:"キリスト教徒が世界総人口に占める割合として正しいものはどれか",choice_a:"約15％",choice_b:"約22％",choice_c:"約31％",choice_d:"約45％",answer:"C",category:"世界宗教統計"},
-  {id:4,question:"世界中で宗教人口が2番目に多い宗教はどれか",choice_a:"キリスト教",choice_b:"イスラーム",choice_c:"ヒンドゥー教",choice_d:"仏教",answer:"B",category:"世界宗教統計"},
-  {id:5,question:"世界中のイスラーム教徒（ムスリム）の人口として正しいものはどれか",choice_a:"約4.9億人",choice_b:"約10.3億人",choice_c:"約15.9億人",choice_d:"約21.6億人",answer:"C",category:"世界宗教統計"},
-  {id:6,question:"世界中のヒンドゥー教徒の人口として正しいものはどれか",choice_a:"約4.9億人",choice_b:"約10.3億人",choice_c:"約15.9億人",choice_d:"約21.6億人",answer:"B",category:"世界宗教統計"},
-  {id:7,question:"世界中の仏教徒の人口として正しいものはどれか",choice_a:"約4.9億人",choice_b:"約10.3億人",choice_c:"約15.9億人",choice_d:"約21.6億人",answer:"A",category:"世界宗教統計"},
-  {id:8,question:"日本における宗教法人数や信者数を掲載した資料は何か",choice_a:"宗教年表",choice_b:"宗教年鑑",choice_c:"日本宗教史",choice_d:"宗教白書",answer:"B",category:"日本宗教統計"},
-  {id:9,question:"日本の宗教年鑑における宗教団体の分類として存在しないものはどれか",choice_a:"ユダヤ系",choice_b:"キリスト系",choice_c:"神道系",choice_d:"仏教系",answer:"A",category:"日本宗教統計"},
-  {id:10,question:"日本において信者数が最も多い宗教系統の組み合わせとして正しいものはどれか",choice_a:"神道系と仏教系",choice_b:"キリスト系と諸教系",choice_c:"仏教系とキリスト系",choice_d:"神道系と諸教系",answer:"A",category:"日本宗教統計"},
-  {id:11,question:"ユダヤ教について正しいものはどれか",choice_a:"イエスを神の子として信仰する",choice_b:"開祖はムハンマドである",choice_c:"民族宗教としての性格が強い",choice_d:"三位一体の神を信仰する",answer:"C",category:"ユダヤ教"},
-  {id:12,question:"ユダヤ教の聖典として最も適切なものはどれか",choice_a:"クルアーン",choice_b:"ヴェーダ",choice_c:"旧約聖書（ヘブライ語）",choice_d:"新約聖書",answer:"C",category:"ユダヤ教"},
-  {id:13,question:"ユダヤ教の聖典の呼称として不適切なものはどれか",choice_a:"トーラー",choice_b:"ヘブライ聖書",choice_c:"旧約聖書",choice_d:"新約聖書",answer:"D",category:"ユダヤ教"},
-  {id:14,question:"ユダヤ教における安息日を指すヘブライ語として正しいものはどれか",choice_a:"ラマダーン",choice_b:"シャバット",choice_c:"ペンテコステ",choice_d:"サバ",answer:"B",category:"ユダヤ教"},
-  {id:15,question:"キリスト教におけるイコンの説明として不適切なものはどれか",choice_a:"正教会で特に重視される宗教的図像である",choice_b:"信仰の対象そのものとして神と同一視される",choice_c:"礼拝や信仰の補助として用いられる",choice_d:"主にイエスや聖人が描かれる",answer:"B",category:"キリスト教"},
-  {id:16,question:"キリスト教における「三位一体」の説明として正しいものはどれか",choice_a:"神・人間・自然の三要素",choice_b:"父・子・聖霊が同一の神である",choice_c:"三人の異なる神が存在する",choice_d:"神と預言者と天使の関係",answer:"B",category:"キリスト教"},
-  {id:17,question:"カトリック教会の特徴として正しいものはどれか",choice_a:"教皇を認めない",choice_b:"イコン崇拝を重視する",choice_c:"ローマ教皇を最高権威とする",choice_d:"聖書のみを信仰の基準とする",answer:"C",category:"キリスト教"},
-  {id:18,question:"正教会に関する説明として正しいものはどれか",choice_a:"プロテスタントの一派である",choice_b:"ロシアを中心に広がっている",choice_c:"教皇を頂点とする組織をもつ",choice_d:"新約聖書を用いない",answer:"B",category:"キリスト教"},
-  {id:19,question:"プロテスタントに共通する特徴として最も適切なものはどれか",choice_a:"教皇の権威を認める",choice_b:"儀礼と聖職者を重視する",choice_c:"聖書を信仰の唯一の基準とする",choice_d:"イコンを用いた礼拝を行う",answer:"C",category:"キリスト教"},
-  {id:20,question:"旧約聖書・新約聖書における「約（やく）」の意味として最も適切なものはどれか",choice_a:"神と人間との間の契約",choice_b:"神が人間に与えた戒律の総称",choice_c:"神話的な象徴表現",choice_d:"未来の終末に関する予言",answer:"A",category:"キリスト教"},
-  {id:21,question:"福音書の説明としてふさわしくないものはどれか",choice_a:"イエスの生と教えを記した文書である",choice_b:"新約聖書に含まれる",choice_c:"モーセの律法を中心に構成されている",choice_d:"マタイ・マルコ・ルカ・ヨハネの四書がある",answer:"C",category:"キリスト教"},
-  {id:22,question:"ペンテコステの説明として最も適切なものはどれか",choice_a:"イエスが誕生した日",choice_b:"聖霊が弟子たちに降臨した出来事",choice_c:"最後の晩餐を記念する祭日",choice_d:"イエスが処刑された日",answer:"B",category:"キリスト教"},
-  {id:23,question:"イスラーム教の開祖として正しいものはどれか",choice_a:"モーセ",choice_b:"イエス",choice_c:"ムハンマド",choice_d:"ゴータマ・シッダールタ",answer:"C",category:"イスラーム"},
-  {id:24,question:"イスラームの聖典として正しいものはどれか",choice_a:"トーラー",choice_b:"クルアーン",choice_c:"アヴェスター",choice_d:"新約聖書",answer:"B",category:"イスラーム"},
-  {id:25,question:"現在、世界最大のムスリム人口を持つ国として正しいものはどれか",choice_a:"サウジアラビア",choice_b:"イラン",choice_c:"インドネシア",choice_d:"エジプト",answer:"C",category:"イスラーム"},
-  {id:26,question:"イスラーム教の五行に含まれないものはどれか",choice_a:"信仰告白",choice_b:"喜捨",choice_c:"巡礼",choice_d:"洗礼",answer:"D",category:"イスラーム"},
-  {id:27,question:"イスラーム教の六信に含まれないものはどれか",choice_a:"神への信仰",choice_b:"天使への信仰",choice_c:"来世への信仰",choice_d:"輪廻転生への信仰",answer:"D",category:"イスラーム"},
-  {id:28,question:"スンニ派とシーア派の違いとして最も適切なものはどれか",choice_a:"神の数の違い",choice_b:"聖典の違い",choice_c:"ムハンマド後継者の考え方",choice_d:"五行の内容の違い",answer:"C",category:"イスラーム"},
-  {id:29,question:"ヒンドゥー教について正しいものはどれか",choice_a:"開祖が明確に存在する",choice_b:"唯一神信仰である",choice_c:"ヴェーダを聖典とする",choice_d:"輪廻転生を否定する",answer:"C",category:"ヒンドゥー教"},
-  {id:30,question:"ヒンドゥー教における三大神の組み合わせとして正しいものはどれか",choice_a:"ブラフマー・ヴィシュヌ・シヴァ",choice_b:"ヤハウェ・アッラー・ブラフマン",choice_c:"イエス・ムハンマド・モーセ",choice_d:"天照大神・須佐之男・月読命",answer:"A",category:"ヒンドゥー教"},
-  {id:31,question:"ヒンドゥー教の前身となった宗教は何か",choice_a:"ジャイナ教",choice_b:"シク教",choice_c:"バラモン教",choice_d:"ゾロアスター教",answer:"C",category:"ヒンドゥー教"},
-  {id:32,question:"ヴァルナ制における「バラモン」の役割として正しいものはどれか",choice_a:"王族と武士",choice_b:"祭司",choice_c:"庶民",choice_d:"隷属民",answer:"B",category:"ヒンドゥー教"},
-  {id:33,question:"ヒンドゥー教の「トリムールティ（三神一体）」に含まれない神はどれか",choice_a:"ブラフマー",choice_b:"ヴィシュヌ",choice_c:"シヴァ",choice_d:"ガネーシャ",answer:"D",category:"ヒンドゥー教"},
-  {id:34,question:"インドで最も信者数が多い宗教と成人人口に占める割合の組み合わせとして正しいものはどれか",choice_a:"イスラム教 - 約80%",choice_b:"ヒンドゥー教 - 約80%",choice_c:"仏教 - 約60%",choice_d:"シク教 - 約50%",answer:"B",category:"ヒンドゥー教"},
-  {id:35,question:"『ラーマーヤナ』の主人公であるラーマ王子はどの神の化身とされているか",choice_a:"ブラフマー",choice_b:"シヴァ",choice_c:"ヴィシュヌ",choice_d:"ガネーシャ",answer:"C",category:"ヒンドゥー教"},
-  {id:36,question:"「梵我一如」の概念において「梵（ブラフマン）」と「我（アートマン）」はそれぞれ何を指すか",choice_a:"梵＝個体原理、我＝宇宙原理",choice_b:"梵＝宇宙原理、我＝個体原理",choice_c:"梵＝輪廻、我＝解脱",choice_d:"梵＝破壊、我＝創造",answer:"B",category:"ヒンドゥー教"},
-  {id:37,question:"ヒンドゥー教徒が神聖視しその肉を食べない動物はどれか",choice_a:"豚",choice_b:"羊",choice_c:"牛",choice_d:"鶏",answer:"C",category:"ヒンドゥー教"},
-  {id:38,question:"2006年までヒンドゥー教を国教としていた唯一の国はどこか",choice_a:"インド",choice_b:"ネパール",choice_c:"バングラデシュ",choice_d:"スリランカ",answer:"B",category:"ヒンドゥー教"},
-  {id:39,question:"バラモン教の基盤となった民族として正しいものはどれか",choice_a:"ドラヴィダ人",choice_b:"アーリア人",choice_c:"モンゴル人",choice_d:"ペルシア人",answer:"B",category:"ヒンドゥー教"},
-  {id:40,question:"シヴァ神の特徴として正しいものはどれか",choice_a:"四つの顔を持ち壺や聖典を持つ",choice_b:"手に円盤やほら貝などの武器を持つ",choice_c:"三つ目で頭上に月と蛇がある",choice_d:"象の頭を持つ",answer:"C",category:"ヒンドゥー教"},
-  {id:41,question:"仏教の開祖として正しいものはどれか",choice_a:"マハーヴィーラ",choice_b:"ゴータマ・シッダールタ",choice_c:"アショーカ王",choice_d:"孔子",answer:"B",category:"仏教"},
-  {id:42,question:"仏教の基本的な目的として最も適切なものはどれか",choice_a:"神への服従",choice_b:"現世利益の追求",choice_c:"苦からの解脱",choice_d:"国家の安定",answer:"C",category:"仏教"},
-  {id:43,question:"上座仏教と大乗仏教の違いとして正しいものはどれか",choice_a:"経典の言語",choice_b:"神の有無",choice_c:"救済対象の範囲",choice_d:"出家制度の有無",answer:"C",category:"仏教"},
-  {id:44,question:"仏陀（ゴータマ・シッダールタ）の死を表す語として最も適切なものはどれか",choice_a:"入滅",choice_b:"解脱",choice_c:"般涅槃",choice_d:"成道",answer:"C",category:"仏教"},
-  {id:45,question:"四諦の内容として正しい組み合わせはどれか",choice_a:"苦・集・滅・道",choice_b:"生・老・病・死",choice_c:"無常・苦・無我・空",choice_d:"正見・正思・正語・正業",answer:"A",category:"仏教"},
-  {id:46,question:"三法印に含まれないものはどれか",choice_a:"無常",choice_b:"無我",choice_c:"苦",choice_d:"常楽我浄",answer:"D",category:"仏教"},
-  {id:47,question:"仏教における三種類の仏典の正しい組み合わせはどれか",choice_a:"経・律・論",choice_b:"聖書・律法・福音",choice_c:"詩・預言・歴史",choice_d:"教義・戒律・神話",answer:"A",category:"仏教"},
-  {id:48,question:"仏教の開祖ゴータマ・シッダールタが生きていたのは何世紀頃か",choice_a:"紀元前1〜2世紀",choice_b:"紀元前5〜6世紀",choice_c:"紀元後1〜2世紀",choice_d:"紀元後5〜6世紀",answer:"B",category:"仏教"},
-  {id:49,question:"「仏陀（ブッダ）」というサンスクリット語の意味として正しいものはどれか",choice_a:"救済者・導く者",choice_b:"目覚めた者・悟った者",choice_c:"創造者・支配する者",choice_d:"修行者・苦行する者",answer:"B",category:"仏教"},
-  {id:50,question:"ブッダが出家を決意するきっかけとなった経験を表す四字熟語はどれか",choice_a:"四苦八苦",choice_b:"因果応報",choice_c:"四門出遊",choice_d:"諸行無常",answer:"C",category:"仏教"},
-  {id:51,question:"ブッダが悟りを開いた場所とその時に座っていた木の組み合わせとして正しいものはどれか",choice_a:"サールナート・沙羅双樹",choice_b:"ブッダガヤー・菩提樹",choice_c:"ルンビニー・菩提樹",choice_d:"クシナガラ・沙羅双樹",answer:"B",category:"仏教"},
-  {id:52,question:"「四諦」のうち苦しみの根源は煩悩と欲望であるという真理を何というか",choice_a:"苦諦",choice_b:"集諦",choice_c:"滅諦",choice_d:"道諦",answer:"B",category:"仏教"},
-  {id:53,question:"仏典の総称である「三蔵」に含まれないものはどれか",choice_a:"律（ヴィナヤ）",choice_b:"経（スートラ）",choice_c:"論（アビダルマ）",choice_d:"讃（ストートラ）",answer:"D",category:"仏教"},
-  {id:54,question:"上座部仏教の特徴として正しいものはどれか",choice_a:"漢訳仏典を使用し東アジアに広がった",choice_b:"パーリ語の聖典を使用し東南アジアに広がった",choice_c:"チベット語聖典を使用しモンゴルに広がった",choice_d:"サンスクリット語聖典を使用し中央アジアに広がった",answer:"B",category:"仏教"},
-  {id:55,question:"大乗仏教の特徴として正しいものはどれか",choice_a:"修行者のみが悟りを得られる",choice_b:"寺院での崇拝対象は釈迦のみである",choice_c:"出家者・在家者を問わずすべての人が悟りを得られる",choice_d:"自分の悟りのみを目指す修行を重視する",answer:"C",category:"仏教"},
-  {id:56,question:"チベット仏教の特徴として正しいものはどれか",choice_a:"仏教（特に密教）と土着宗教（ボン教）の混合",choice_b:"パーリ語の聖典のみを使用",choice_c:"転生の概念を否定している",choice_d:"バラモン教の儀礼をそのまま継承している",answer:"A",category:"仏教"},
-  {id:57,question:"ブッダが最初の説法（初転法輪）を行った場所はどこか",choice_a:"ルンビニー",choice_b:"ブッダガヤー",choice_c:"サールナート（鹿野苑）",choice_d:"クシナガラ",answer:"C",category:"仏教"},
-  {id:58,question:"「三法印」に含まれないものはどれか",choice_a:"諸行無常",choice_b:"諸法無我",choice_c:"涅槃寂静",choice_d:"因果応報",answer:"D",category:"仏教"},
-  {id:59,question:"17世紀からチベット仏教の指導者となっている人物の称号はどれか",choice_a:"法王",choice_b:"ダライ・ラマ",choice_c:"大僧正",choice_d:"カリフ",answer:"B",category:"仏教"},
-  {id:60,question:"ブッダが亡くなった（入滅した）場所はどこか",choice_a:"ルンビニー",choice_b:"ブッダガヤー",choice_c:"サールナート",choice_d:"クシナガラ",answer:"D",category:"仏教"},
-  {id:61,question:"仏教が目指す最終的な目標は何か",choice_a:"輪廻の継続",choice_b:"解脱（輪廻からの脱出）",choice_c:"バラモンになること",choice_d:"王族への転生",answer:"B",category:"仏教"},
-  {id:62,question:"神道について正しいものはどれか",choice_a:"開祖と明確な教典をもつ",choice_b:"唯一神信仰である",choice_c:"自然や祖先を神として崇拝する",choice_d:"輪廻転生を中心教義とする",answer:"C",category:"神道"},
-  {id:63,question:"神道の起源について正しい記述はどれか",choice_a:"孔子が開祖である",choice_b:"特定の開祖はなく自然発生的に成立した",choice_c:"仏教伝来後に新しく創設された",choice_d:"キリスト教の影響を受けて成立した",answer:"B",category:"神道"},
-  {id:64,question:"神道において神（カミ）が宿る媒介物を何というか",choice_a:"御神体",choice_b:"依代",choice_c:"本地仏",choice_d:"神宮寺",answer:"B",category:"神道"},
-  {id:65,question:"神社の基本構造においてご神体が安置される場所を何というか",choice_a:"拝殿",choice_b:"本殿",choice_c:"神楽殿",choice_d:"鳥居",answer:"B",category:"神道"},
-  {id:66,question:"伊勢神宮で20年に1度行われる神社を建て替える行事を何というか",choice_a:"遷宮",choice_b:"神幸祭",choice_c:"例大祭",choice_d:"祈年祭",answer:"A",category:"神道"},
-  {id:67,question:"記紀神話を構成する2つの書物の組み合わせとして正しいものはどれか",choice_a:"『万葉集』と『風土記』",choice_b:"『古事記』と『日本書紀』",choice_c:"『源氏物語』と『枕草子』",choice_d:"『延喜式』と『令義解』",answer:"B",category:"神道"},
-  {id:68,question:"廃仏毀釈が行われた時期として正しいものはどれか",choice_a:"奈良時代",choice_b:"平安時代",choice_c:"鎌倉時代",choice_d:"明治時代",answer:"D",category:"神道"},
-  {id:69,question:"「神」への考え方として仏教に最も近いものはどれか",choice_a:"人格神への絶対的信仰",choice_b:"創造神の存在を前提とする",choice_c:"神の存在を教義の中心に置かない",choice_d:"民族神を崇拝する",answer:"C",category:"日本仏教の宗派"},
-  {id:70,question:"密教的儀礼を重視する宗派の組み合わせとして正しいものはどれか",choice_a:"浄土宗と浄土真宗",choice_b:"天台宗と真言宗",choice_c:"曹洞宗と臨済宗",choice_d:"日蓮宗と法華宗",answer:"B",category:"日本仏教の宗派"},
-  {id:71,question:"坐禅と公案（修行者の悟りを導く問答）を重視する禅宗の宗派の組み合わせとして正しいものはどれか",choice_a:"天台宗と真言宗",choice_b:"浄土宗と浄土真宗",choice_c:"曹洞宗と臨済宗",choice_d:"日蓮宗と時宗",answer:"C",category:"日本仏教の宗派"},
-  {id:72,question:"「南無阿弥陀仏」と念仏を唱えて極楽往生を目指す宗派の組み合わせとして正しいものはどれか",choice_a:"曹洞宗と臨済宗",choice_b:"天台宗と真言宗",choice_c:"浄土宗と浄土真宗",choice_d:"日蓮宗と法華宗",answer:"C",category:"日本仏教の宗派"},
-  {id:73,question:"「南無妙法蓮華経」とお題目を唱え国家との結びつきを重視する宗派はどれか",choice_a:"浄土宗",choice_b:"真言宗",choice_c:"曹洞宗",choice_d:"日蓮宗",answer:"D",category:"日本仏教の宗派"},
-  {id:74,question:"真言宗の開祖と総本山の組み合わせとして正しいものはどれか",choice_a:"最澄 - 比叡山延暦寺",choice_b:"空海 - 高野山金剛峯寺",choice_c:"法然 - 知恩院",choice_d:"親鸞 - 西本願寺",answer:"B",category:"日本仏教の宗派"},
-  {id:75,question:"神仏習合とは何を指すか",choice_a:"神道を廃止し仏教を国教とすること",choice_b:"神と仏を同一視・融合する考え方",choice_c:"神道と仏教を厳密に分離する政策",choice_d:"神道が仏教を排除する運動",answer:"B",category:"神仏習合・分離"},
-  {id:76,question:"6世紀に仏像や経典を日本に送った国はどこか",choice_a:"中国（唐）",choice_b:"百済",choice_c:"新羅",choice_d:"高句麗",answer:"B",category:"神仏習合・分離"},
-  {id:77,question:"8世紀初頭神のために神社に付属して建てられた寺院を何というか",choice_a:"本山",choice_b:"末寺",choice_c:"神宮寺",choice_d:"菩提寺",answer:"C",category:"神仏習合・分離"},
-  {id:78,question:"仏・菩薩が人々を救済するために「神」の姿として現れるという10世紀に広まった思想を何というか",choice_a:"神仏習合",choice_b:"本地垂迹",choice_c:"廃仏毀釈",choice_d:"神仏分離",answer:"B",category:"神仏習合・分離"},
-  {id:79,question:"江戸時代中期に盛んになり神仏習合していない神道本来の姿を追求した学問は何か",choice_a:"蘭学",choice_b:"儒学",choice_c:"国学",choice_d:"洋学",answer:"C",category:"神仏習合・分離"},
-  {id:80,question:"1868年に明治政府が発した仏教色を排除し神仏分離を進める政策は何か",choice_a:"禁教令",choice_b:"神仏判然令",choice_c:"伴天連追放令",choice_d:"宗門改制度",answer:"B",category:"神仏習合・分離"},
-  {id:81,question:"神仏分離令の結果政府の意図に反して起こった仏教排斥運動を何というか",choice_a:"廃仏毀釈",choice_b:"島原の乱",choice_c:"本地垂迹",choice_d:"神仏習合",answer:"A",category:"神仏習合・分離"},
-  {id:82,question:"1549年に日本に上陸し薩摩で伝道を行ったイエズス会の宣教師は誰か",choice_a:"ルイス・フロイス",choice_b:"フランシスコ・ザビエル",choice_c:"ヴァリニャーノ",choice_d:"オルガンティーノ",answer:"B",category:"キリスト教伝来"},
-  {id:83,question:"1587年にキリスト教宣教師の国外追放を命じた法令を発したのは誰か",choice_a:"織田信長",choice_b:"豊臣秀吉",choice_c:"徳川家康",choice_d:"徳川家光",answer:"B",category:"キリスト教伝来"},
-  {id:84,question:"1629年から長崎でキリスト教信者を摘発するために用いられた方法は何か",choice_a:"宗門改",choice_b:"踏み絵",choice_c:"檀家制度",choice_d:"本末制度",answer:"B",category:"キリスト教伝来"},
-  {id:85,question:"檀家制度の説明として最も適切なものはどれか",choice_a:"神社と地域住民の関係を制度化したものである",choice_b:"仏教寺院と信徒（家）との間の帰属関係を定めた制度である",choice_c:"国家が僧侶を直接管理するための制度である",choice_d:"宗派間の対立を調停するために設けられた制度である",answer:"B",category:"檀家制度"},
-  {id:86,question:"檀家制度が全国的に確立した主な歴史的背景として正しいものはどれか",choice_a:"平安時代の仏教文化の発展",choice_b:"鎌倉仏教による民衆布教の拡大",choice_c:"江戸時代におけるキリスト教禁制政策",choice_d:"明治時代の神仏分離政策",answer:"C",category:"檀家制度"},
-  {id:87,question:"檀家制度の機能として適切でないものはどれか",choice_a:"寺院の経済的基盤の維持",choice_b:"葬儀や先祖供養を通じた仏教の定着",choice_c:"キリスト教信者の摘発と監視",choice_d:"仏教教義の体系的教育の義務化",answer:"D",category:"檀家制度"},
-  {id:88,question:"檀家制度において寺院が特定の家に対して永続的に担当する役割として正しいものはどれか",choice_a:"政治的助言",choice_b:"葬祭・供養・法事",choice_c:"軍事的保護",choice_d:"経済的投資",answer:"B",category:"檀家制度"},
-  {id:89,question:"キリスト教徒ではないことを証明するため必ず寺院の檀家になることを求めた制度は何か",choice_a:"本末制度",choice_b:"宗門改制度",choice_c:"神仏判然令",choice_d:"禁教令",answer:"B",category:"檀家制度"},
-  {id:90,question:"仏教各宗の寺院を本山から末寺までピラミッド構造で編成した江戸幕府の統制制度は何か",choice_a:"檀家制度",choice_b:"宗門改制度",choice_c:"本末制度",choice_d:"寺社奉行制度",answer:"C",category:"檀家制度"},
-  {id:91,question:"檀家制度の広がりによって仏教が葬儀と深く結びついたことを仏教史学者の圭室諦成は何と称したか",choice_a:"鎌倉仏教",choice_b:"葬式仏教",choice_c:"国家仏教",choice_d:"民衆仏教",answer:"B",category:"檀家制度"},
-  {id:92,question:"近世後期から幕末維新期に民衆の間に現れた新宗教に含まれないものはどれか",choice_a:"天理教",choice_b:"金光教",choice_c:"真言宗",choice_d:"黒住教",answer:"C",category:"新宗教"},
-  {id:93,question:"東アジアで祖先崇拝（先祖祭祀）が広く見られる地域の組み合わせとして正しいものはどれか",choice_a:"インドと中東",choice_b:"東アジアと東南アジア",choice_c:"ヨーロッパとアフリカ",choice_d:"南米とオセアニア",answer:"B",category:"新宗教"},
-  {id:94,question:"ユダヤ教・キリスト教・イスラームに共通する特徴として正しいものはどれか",choice_a:"多神信仰",choice_b:"輪廻転生",choice_c:"唯一神信仰",choice_d:"自然神崇拝",answer:"C",category:"複合問題"},
-  {id:95,question:"ユダヤ教・キリスト教・イスラームの三宗教に共通しヒンドゥー教・仏教・神道には当てはまらない特徴として正しいものはどれか",choice_a:"輪廻転生を説く",choice_b:"唯一神との契約を重視する",choice_c:"多神的世界観をもつ",choice_d:"自然物を神格化する",answer:"B",category:"複合問題"},
-  {id:96,question:"次の組み合わせのうち対応が正しいものはどれか",choice_a:"クルアーン ― キリスト教",choice_b:"ヴェーダ ― 仏教",choice_c:"旧約聖書 ― ユダヤ教",choice_d:"福音書 ― イスラーム",answer:"C",category:"複合問題"},
-  {id:97,question:"「開祖が明確に存在しない宗教」の組み合わせとして正しいものはどれか",choice_a:"ユダヤ教・ヒンドゥー教",choice_b:"キリスト教・仏教",choice_c:"イスラーム・神道",choice_d:"仏教・キリスト教",answer:"A",category:"複合問題"},
-  {id:98,question:"戒律や生活規範が食文化と強く結びついている宗教の組み合わせはどれか",choice_a:"仏教・神道",choice_b:"ユダヤ教・イスラーム",choice_c:"キリスト教・仏教",choice_d:"ヒンドゥー教・神道",answer:"B",category:"複合問題"},
-  {id:99,question:"宗教とその「死後観・解脱観」の対応として正しいものはどれか",choice_a:"仏教 ― 最終審判",choice_b:"キリスト教 ― 輪廻転生",choice_c:"イスラーム ― 来世での裁き",choice_d:"神道 ― 般涅槃",answer:"C",category:"複合問題"},
-  {id:100,question:"「神」という概念の扱いについて最も適切な組み合わせはどれか",choice_a:"仏教 ― 創造神を中心に据える",choice_b:"神道 ― 人格的唯一神を信仰する",choice_c:"キリスト教 ― 三位一体の唯一神",choice_d:"ヒンドゥー教 ― 神の存在を否定する",answer:"C",category:"複合問題"},
-  {id:101,question:"宗派区分と宗教の対応として正しいものはどれか",choice_a:"スンニ派・シーア派 ― キリスト教",choice_b:"大乗仏教・上座仏教 ― 仏教",choice_c:"カトリック・正教会 ― イスラーム",choice_d:"プロテスタント・ヒンドゥー教",answer:"B",category:"複合問題"},
-  {id:102,question:"日本の宗教文化の特徴として仏教・神道の双方に関わる概念として正しいものはどれか",choice_a:"輪廻転生の否定",choice_b:"神仏習合",choice_c:"唯一神信仰",choice_d:"五行の実践",answer:"B",category:"複合問題"},
-  {id:103,question:"「民族宗教」としての性格が最も強いものはどれか",choice_a:"キリスト教",choice_b:"イスラーム",choice_c:"ユダヤ教",choice_d:"仏教",answer:"C",category:"複合問題"},
-  {id:104,question:"1970年代の日本におけるオカルトブームのきっかけとなった1974年に日本で上映されたアメリカ映画はどれか",choice_a:"ゴーストバスターズ",choice_b:"エクソシスト",choice_c:"オーメン",choice_d:"シャイニング",answer:"B",category:"オカルト・スピリチュアリティ"},
-  {id:105,question:"1974年に来日しテレビ番組でスプーン曲げを披露して超能力ブームを引き起こした人物は誰か",choice_a:"エドガー・ケイシー",choice_b:"ユリ・ゲラー",choice_c:"ノストラダムス",choice_d:"ダニオン・ブリンクリー",answer:"B",category:"オカルト・スピリチュアリティ"},
-  {id:106,question:"西山茂が1970年代以降の日本の宗教状況を表現するために用いた近代合理主義の価値観による支配が終わりつつあることを示す概念はどれか",choice_a:"宗教の私事化",choice_b:"脱私事化",choice_c:"非合理的復権",choice_d:"世俗化",answer:"C",category:"オカルト・スピリチュアリティ"},
-  {id:107,question:"1995年に発生し日本のオカルトブームに終止符を打つきっかけとなった事件はどれか",choice_a:"阪神・淡路大震災",choice_b:"地下鉄サリン事件",choice_c:"統一教会問題",choice_d:"尼崎連続変死事件",answer:"B",category:"オカルト・スピリチュアリティ"},
-  {id:108,question:"1990年代後半から2000年代前半の日本における「スピリチュアリティ」の特徴として最も適切なものはどれか",choice_a:"意識変容による自己超越を目指す",choice_b:"「宗教」や「霊」を想起させない用語として普及した",choice_c:"組織宗教への帰属を重視する",choice_d:"科学的合理性に基づく世界観を提唱する",answer:"B",category:"オカルト・スピリチュアリティ"},
-  {id:109,question:"ピーター・バーガーが『聖なる天蓋』で定義した「世俗化」の説明として最も適切なものはどれか",choice_a:"宗教が政治権力と結びついて国家を支配するプロセス",choice_b:"社会や文化のさまざまな領域が宗教の制度や象徴による支配から離れていくプロセス",choice_c:"宗教が消費社会において商品化されていくプロセス",choice_d:"宗教が科学技術の発展によって証明されていくプロセス",answer:"B",category:"世俗化・公共宗教"},
-  {id:110,question:"従来の世俗化理論において近代化に伴い宗教が公的領域から退き個人の内面的な信仰に限定されていく現象を何と呼ぶか",choice_a:"公共宗教",choice_b:"脱私事化",choice_c:"宗教の私事化",choice_d:"非合理的復権",answer:"C",category:"世俗化・公共宗教"},
-  {id:111,question:"ホセ・カサノヴァが提唱した概念で1980年代以降宗教が私的領域を踏み越えて公的領域において役割を果たすことを主張し始める現象を何と呼ぶか",choice_a:"世俗化",choice_b:"宗教の私事化",choice_c:"脱私事化",choice_d:"宗教の商品化",answer:"C",category:"世俗化・公共宗教"},
-  {id:112,question:"ジル・ケペルが『宗教の復讐』で指摘した1970年代後半に宗教が公的な場面に戻るきっかけとなった世界的出来事に含まれないものはどれか",choice_a:"1977年 ベギン内閣（イスラエル）",choice_b:"1978年 教皇ヨハネ・パウロ2世就任（バチカン）",choice_c:"1979年 イラン・イスラーム革命",choice_d:"1989年 ベルリンの壁崩壊",answer:"D",category:"世俗化・公共宗教"},
-  {id:113,question:"イスラームにおいて頭と首を覆うスカーフを指しアラビア語で「覆うもの」を意味する言葉はどれか",choice_a:"ブルカ",choice_b:"ニカブ",choice_c:"ヒジャブ",choice_d:"チャドル",answer:"C",category:"ヒジャブ・イラン・ライシテ"},
-  {id:114,question:"1979年のイラン・イスラーム革命を指導しイスラーム法による統治を主張したシーア派法学者は誰か",choice_a:"ハメネイ",choice_b:"ホメイニー",choice_c:"サダト",choice_d:"ナセル",answer:"B",category:"ヒジャブ・イラン・ライシテ"},
-  {id:115,question:"イラン・イスラーム革命以前のパフラヴィー朝の政策として正しいものはどれか",choice_a:"ヴェール着用の義務化",choice_b:"脱イスラームによる西欧化政策",choice_c:"シーア派ウラマーの政治参加促進",choice_d:"イスラーム法の厳格な適用",answer:"B",category:"ヒジャブ・イラン・ライシテ"},
-  {id:116,question:"2022年にイランで発生した不適切なヒジャブの着用を理由に警察に連行された後に死亡し大規模な反政府デモのきっかけとなった女性は誰か",choice_a:"マララ・ユスフザイ",choice_b:"マフサ・アミニ",choice_c:"シリン・エバディ",choice_d:"ナスリン・ソトゥーデ",answer:"B",category:"ヒジャブ・イラン・ライシテ"},
-  {id:117,question:"フランスにおける「ライシテ」の説明として最も適切なものはどれか",choice_a:"国家がカトリック教会を公式に支援する制度",choice_b:"政治権力を宗教から自律させ宗教的自由を保障する制度",choice_c:"イスラーム教徒の移民を積極的に受け入れる政策",choice_d:"宗教教育を公立学校で義務化する制度",answer:"B",category:"ヒジャブ・イラン・ライシテ"},
-  {id:118,question:"2004年にフランスで制定された公立学校における宗教的標章の着用を規制する法律の対象に含まれないものはどれか",choice_a:"大きな十字架（キリスト教）",choice_b:"キッパ（ユダヤ教）",choice_c:"ヒジャブ（イスラーム）",choice_d:"小さなメダル（キリスト教）",answer:"D",category:"ヒジャブ・イラン・ライシテ"},
-  {id:119,question:"イランとフランスのヴェール政策の比較として正しいものはどれか",choice_a:"両国ともヴェールの着用を義務化している",choice_b:"イランは着用を義務化しフランスは公的空間での着用を制限している",choice_c:"両国ともヴェールの着用を禁止している",choice_d:"イランは着用を禁止しフランスは着用を奨励している",answer:"B",category:"ヒジャブ・イラン・ライシテ"},
-  {id:120,question:"シーア派のウラマー（イスラーム法学者）の位階制において最高権威を示す呼称はどれか",choice_a:"イマーム",choice_b:"ムフティー",choice_c:"大アーヤトッラー",choice_d:"カリフ",answer:"C",category:"ヒジャブ・イラン・ライシテ"},
-  {id:121,question:"井上順孝が提唱した「ハイパー宗教」の特徴として最も適切なものはどれか",choice_a:"伝統的な教団組織への帰属を重視する",choice_b:"さまざまな宗教伝統から要素を取り出して自由に組み合わせる",choice_c:"科学的合理性に基づいて宗教を否定する",choice_d:"国家権力と宗教が一体化する",answer:"B",category:"ヒジャブ・イラン・ライシテ"},
-  {id:122,question:"「カルト」という語の語源について正しいものを選びなさい",choice_a:"ギリシア語の「秘密」を意味する語に由来する",choice_b:"ラテン語の「儀礼・祭祀」を意味する語に由来する",choice_c:"ヘブライ語の「異端」を意味する語に由来する",choice_d:"英語の「崇拝」を意味する語から造られた新語である",answer:"B",category:"カルト問題"},
-  {id:123,question:"1970年代以降アメリカで「破壊的カルト」という意味で「カルト」という語を広めたのは主にどのような立場の人々か",choice_a:"宗教学の研究者",choice_b:"保守的福音派のキリスト教徒",choice_c:"反カルト運動家や脱会カウンセラー",choice_d:"政府の宗教政策担当者",answer:"C",category:"カルト問題"},
-  {id:124,question:"「マインドコントロール」と「回心」の説明として最も適切なものを選びなさい",choice_a:"どちらも本人の自主性を重視した視点である",choice_b:"マインドコントロールは本人の意識変化を重視し回心は外部からの強制を重視する",choice_c:"マインドコントロールは外部からの強制的影響を強調し回心は本人の宗教経験や意識変化を重視する",choice_d:"どちらも価値中立的な学術用語として広く使用されている",answer:"C",category:"カルト問題"},
-  {id:125,question:"回心（conversion）の説明として正しいものを選びなさい",choice_a:"組織側の認知的枠組みを強制的に押し付けられる過程",choice_b:"啓示や悟りといった宗教経験を境に人格や生活様式が根本から変化する過程",choice_c:"脱会カウンセラーによって信仰を放棄させられる過程",choice_d:"社会心理学的な説得技法によって入信させられる過程",answer:"B",category:"カルト問題"},
-  {id:126,question:"櫻井義秀が述べる「社会的相当性」の説明として正しいものを選びなさい",choice_a:"宗教団体が法的に認められるための普遍的・絶対的な基準",choice_b:"人権や社会権によって期待されるべき規範や妥当性の基準であり時代に応じて変化する",choice_c:"宗教学者が定めた学術的な分類基準",choice_d:"国家が宗教団体を統制するための法律上の要件",answer:"B",category:"カルト問題"},
-  {id:127,question:"オウム真理教における「慈悲殺」の論理として正しいものを選びなさい",choice_a:"信者の修行の一環として動物を殺して供養する行為",choice_b:"悪人が悪を犯す前に命を絶つことでその人を救済するという考え",choice_c:"病気で苦しむ信者を安楽死させる行為",choice_d:"敵対する宗教団体を攻撃することで世界を浄化するという思想",answer:"B",category:"カルト問題"},
-  {id:128,question:"中村生雄が提唱した「供犠の文化」の特徴として正しいものを選びなさい",choice_a:"殺した動物の霊を弔い定期的に浄化しようとする文化",choice_b:"動物を神の賜物とみなし神への返礼として捧げる文化",choice_c:"人と神の連続性を前提とし共食を重視する文化",choice_d:"仏教の不殺生理念に基づき動物を放つ文化",answer:"B",category:"供犠・動物倫理"},
-  {id:129,question:"「供養の文化」の特徴として正しいものを選びなさい",choice_a:"創造神を持つ一神教圏で発達した",choice_b:"犠牲獣を完全に焼き尽くして神に捧げる",choice_c:"殺した動物の霊を弔い罪を定期的に確認しながら浄化しようとする",choice_d:"人と神の非連続性を前提とする",answer:"C",category:"供犠・動物倫理"},
-  {id:130,question:"ユダヤ教の「全焼の供犠（燔祭、ホロコースト）」の説明として正しいものを選びなさい",choice_a:"犠牲獣の肉を神と人間が分け合って食べる儀式",choice_b:"犠牲獣を野に放って命を救う儀式",choice_c:"犠牲獣の全体が祭壇で焼き尽くされ骨と灰しか残らない儀式",choice_d:"犠牲獣の血を大地に撒いて豊穣を祈る儀式",answer:"C",category:"供犠・動物倫理"},
-  {id:131,question:"聖書（創世記）における人間と動物の関係の説明として正しいものを選びなさい",choice_a:"人間と動物は平等な存在として創造された",choice_b:"動物は人間の祖先として敬われるべき存在である",choice_c:"人間は神にかたどって創造され動物を支配する存在とされた",choice_d:"人間は動物から進化した存在として描かれている",answer:"C",category:"供犠・動物倫理"},
-  {id:132,question:"「アニマルライツ（動物権）」の立場として正しいものを選びなさい",choice_a:"人間による動物の利用を認めるが苦痛を減らすべきとする",choice_b:"動物も人間と同等の権利を持ち食肉文化の徹底的な改革を目指す",choice_c:"動物の利用は栄養・環境・健康・行動・快適さの基準で判断すべきとする",choice_d:"伝統的な狩猟文化を維持しながら動物を保護すべきとする",answer:"B",category:"供犠・動物倫理"},
-  {id:133,question:"「アニマルウェルフェア（動物福祉）」の立場として正しいものを選びなさい",choice_a:"動物も人間と同等の権利を持つため一切の利用を禁止すべきとする",choice_b:"動物であることで命を侵害することは種の差別であるとする",choice_c:"人間による動物の利用を認めるがなるべくその苦痛を減らしていくべきとする",choice_d:"食肉文化（カーニズム）のシステムを徹底的に改革すべきとする",answer:"C",category:"供犠・動物倫理"},
-  {id:134,question:"「放生会」の説明として正しいものを選びなさい",choice_a:"動物を犠牲として神に捧げ焼き尽くす儀式",choice_b:"仏教の不殺生の戒めに基づき鳥や魚を野や海に放って命を救う法会",choice_c:"狩猟で得た獲物を神前に並べて感謝する祭り",choice_d:"死んだ動物の霊を慰めるために塚を建てる行事",answer:"B",category:"供犠・動物倫理"},
-  {id:135,question:"日本における実験動物供養について正しいものを選びなさい",choice_a:"明治時代に西洋から導入された習慣である",choice_b:"最も古い記録は1917年の九州帝国大学での動物祭である",choice_c:"仏教の教義で禁止されているため現在は行われていない",choice_d:"政府の法律によって義務付けられている",answer:"B",category:"供犠・動物倫理"},
-  {id:136,question:"1970年代以降英語圏を中心に動物倫理の議論が浮上した背景として授業で挙げられたものを選びなさい",choice_a:"宗教的な終末論の流行",choice_b:"J・S・ミルの功利主義の影響と人間と動物の境界線の再考",choice_c:"仏教の不殺生理念の世界的な普及",choice_d:"国際連合による動物保護条約の締結",answer:"B",category:"供犠・動物倫理"},
-  {id:137,question:"次の宗教と、その成立時期（おおよその世紀）の組み合わせとして正しいものはどれか",choice_a:"ユダヤ教 ― 紀元後1世紀ごろ",choice_b:"キリスト教 ― 紀元前5世紀ごろ",choice_c:"イスラーム ― 紀元後7世紀ごろ",choice_d:"仏教 ― 紀元後15世紀ごろ",answer:"C",category:"複合問題"},
-  {id:138,question:"次の宗教と、その成立時期（おおよその世紀）の組み合わせとして正しいものはどれか",choice_a:"ユダヤ教 ― 紀元後7世紀ごろ",choice_b:"キリスト教 ― 紀元後1世紀ごろ",choice_c:"イスラーム ― 紀元前5世紀ごろ",choice_d:"仏教 ― 紀元後15世紀ごろ",answer:"B",category:"複合問題"},
-  {id:139,question:"次の宗教と、その成立時期（おおよその世紀）の組み合わせとして正しいものはどれか",choice_a:"仏教 ― 紀元前5世紀ごろ",choice_b:"キリスト教 ― 紀元後7世紀ごろ",choice_c:"ユダヤ教 ― 紀元後1世紀ごろ",choice_d:"イスラーム ― 紀元前13世紀ごろ",answer:"A",category:"複合問題"},
-  {id:140,question:"次の宗教と、その成立時期（おおよその世紀）の組み合わせとして正しいものはどれか",choice_a:"ユダヤ教 ― 紀元前13世紀ごろ",choice_b:"仏教 ― 紀元後1世紀ごろ",choice_c:"キリスト教 ― 紀元前5世紀ごろ",choice_d:"イスラーム ― 紀元後15世紀ごろ",answer:"A",category:"複合問題"},
-  {id:141,question:"イスラーム法（シャリーア）の説明として最も適切なものはどれか",choice_a:"国家が制定した世俗的な成文法体系",choice_b:"クルアーンと預言者ムハンマドの言行に基づく宗教的規範",choice_c:"中世ヨーロッパの慣習法を基礎とする法体系",choice_d:"イスラーム教徒の信仰行為のみを規制する儀礼規則",answer:"B",category:"イスラーム"},
-  {id:142,question:"世界のムスリム全体に占めるスンニ派の割合として最も適切なものはどれか",choice_a:"約10％",choice_b:"約15％",choice_c:"約80％",choice_d:"約90％",answer:"D",category:"イスラーム"},
-  {id:143,question:"イラン国内のムスリム全体に占めるシーア派の割合として最も適切なものはどれか",choice_a:"約10％",choice_b:"約15％",choice_c:"約80％",choice_d:"約90％",answer:"D",category:"イスラーム"}    
-];
+    const categories = [...new Set(quizData.map(q => q.category))];
 
-/* ======================
-   App
-====================== */
-function App(){
-  const [mode, setMode] = React.useState("home");
-  const [category, setCategory] = React.useState(null);
-  const [index, setIndex] = React.useState(0);
-  const [correct, setCorrect] = React.useState(0);
-  const [answers, setAnswers] = React.useState([]);
-  const [wrongQuestions, setWrongQuestions] = React.useState(
-    JSON.parse(localStorage.getItem("wrong")||"[]")
-  );
-
-  /* ★ログ機能 */
-  const [logs, setLogs] = React.useState(
-    JSON.parse(localStorage.getItem("logs")||"[]")
-  );
-  const [startTime, setStartTime] = React.useState(null);
-  const [openLog, setOpenLog] = React.useState(null);
-
-  const categories = [...new Set(quizData.map(q=>q.category))];
-
-  const currentSet =
-    mode==="review"
-      ? quizData.filter(q=>wrongQuestions.includes(q.id))
-      : category
-        ? quizData.filter(q=>q.category===category)
-        : quizData;
-
-  const q = currentSet[index];
-
-  function start(m, c=null){
-    setMode(m);
-    setCategory(c);
-    setIndex(0);
-    setCorrect(0);
-    setAnswers([]);
-    setStartTime(Date.now());
-  }
-
-  function answer(i){
-    const isCorrect = i===q.answer;
-    if(isCorrect) setCorrect(c=>c+1);
-    else if(!wrongQuestions.includes(q.id)){
-      const nw=[...wrongQuestions,q.id];
-      setWrongQuestions(nw);
-      localStorage.setItem("wrong",JSON.stringify(nw));
-    }
-    setAnswers(a=>[...a,isCorrect]);
-    if(index+1<currentSet.length) setIndex(i=>i+1);
-    else finish();
-  }
-
-  function finish(){
-    const time = Math.floor((Date.now()-startTime)/1000);
-    const remaining =
-      mode==="review"
-        ? wrongQuestions.filter(id=>!currentSet.some(q=>q.id===id && answers[currentSet.findIndex(x=>x.id===id)]===true))
-        : wrongQuestions;
-
-    if(mode==="review" && remaining.length===0){
-      setWrongQuestions([]);
-      localStorage.setItem("wrong","[]");
-    }
-
-    const log = {
-      date:new Date().toLocaleString(),
-      mode,
-      category:category||"全体",
-      total:currentSet.length,
-      correct,
-      time,
-      remaining:remaining.length
+    const shuffleArray = (array) => {
+      const shuffled = [...array];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
     };
-    const newLogs=[log,...logs];
-    setLogs(newLogs);
-    localStorage.setItem("logs",JSON.stringify(newLogs));
-    setMode("result");
-  }
 
-  /* ======================
-     Views
-  ====================== */
+    function App() {
+      const [screen, setScreen] = useState('home');
+      const [selectedCategory, setSelectedCategory] = useState('all');
+      const [questions, setQuestions] = useState([]);
+      const [currentIndex, setCurrentIndex] = useState(0);
+      const [selectedAnswer, setSelectedAnswer] = useState(null);
+      const [showResult, setShowResult] = useState(false);
+      const [score, setScore] = useState(0);
+      const [answered, setAnswered] = useState(0);
+      const [wrongQuestions, setWrongQuestions] = useState([]);
+      const [quizMode, setQuizMode] = useState('normal');
 
-  if(mode==="home") return (
-    <div className="container">
-      <div className="card row">
-        <div className="stat"><b>{quizData.length}</b><div>総問題数</div></div>
-        <div className="stat"><b>{categories.length}</b><div>カテゴリ</div></div>
-        <div className="stat"><b>{wrongQuestions.length}</b><div>復習待ち</div></div>
-      </div>
+      const currentQuestion = questions[currentIndex];
 
-      <div className="card">
-        <button className="btn primary" onClick={()=>start("all")}>▶ 全問学習</button>
-        <button className="btn ghost" onClick={()=>start("review")} disabled={!wrongQuestions.length}>復習</button>
-      </div>
+      const startQuiz = (mode = 'normal', category = 'all') => {
+        setQuizMode(mode);
+        setSelectedCategory(category);
+        
+        let filteredQuestions;
+        if (mode === 'review' && wrongQuestions.length > 0) {
+          filteredQuestions = shuffleArray(wrongQuestions);
+        } else if (category === 'all') {
+          filteredQuestions = shuffleArray(quizData);
+        } else {
+          filteredQuestions = shuffleArray(quizData.filter(q => q.category === category));
+        }
+        
+        setQuestions(filteredQuestions);
+        setCurrentIndex(0);
+        setSelectedAnswer(null);
+        setShowResult(false);
+        setScore(0);
+        setAnswered(0);
+        if (mode !== 'review') {
+          setWrongQuestions([]);
+        }
+        setScreen('quiz');
+      };
 
-      <div className="card">
-        <h3>📚 カテゴリ別に学習</h3>
-        <div className="row">
-          {categories.map(c=>(
-            <button key={c} className="btn ghost" onClick={()=>start("category",c)}>{c}</button>
-          ))}
-        </div>
-      </div>
+      const handleAnswer = (answer) => {
+        if (selectedAnswer) return;
+        
+        setSelectedAnswer(answer);
+        setAnswered(prev => prev + 1);
+        
+        if (answer === currentQuestion.answer) {
+          setScore(prev => prev + 1);
+        } else {
+          if (!wrongQuestions.find(q => q.id === currentQuestion.id)) {
+            setWrongQuestions(prev => [...prev, currentQuestion]);
+          }
+        }
+      };
 
-      <div className="card">
-        <h3>📊 学習ログ</h3>
-        {logs.slice(0,3).map((l,i)=>(
-          <div key={i} className="btn ghost" onClick={()=>setOpenLog(l)}>
-            {l.date} / {l.correct}/{l.total}
+      const nextQuestion = () => {
+        if (currentIndex < questions.length - 1) {
+          setCurrentIndex(prev => prev + 1);
+          setSelectedAnswer(null);
+        } else {
+          setShowResult(true);
+        }
+      };
+
+      const getButtonStyle = (choice) => {
+        const base = "w-full p-4 text-left rounded-xl border-2 transition-all duration-300 font-medium";
+        
+        if (!selectedAnswer) {
+          return `${base} border-slate-200 bg-white hover:border-amber-400 hover:bg-amber-50 active:scale-98`;
+        }
+        
+        if (choice === currentQuestion.answer) {
+          return `${base} border-emerald-500 bg-emerald-50 text-emerald-800`;
+        }
+        
+        if (choice === selectedAnswer && choice !== currentQuestion.answer) {
+          return `${base} border-rose-500 bg-rose-50 text-rose-800`;
+        }
+        
+        return `${base} border-slate-200 bg-slate-50 text-slate-400`;
+      };
+
+      const accuracy = answered > 0 ? Math.round((score / answered) * 100) : 0;
+
+      // Home Screen
+      if (screen === 'home') {
+        return (
+          <div className="min-h-screen bg-gradient-to-br from-slate-50 via-amber-50 to-orange-50">
+            <div className="max-w-lg mx-auto px-4 py-8">
+              <div className="text-center mb-10">
+                <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 shadow-lg shadow-amber-200 mb-4">
+                  <span className="text-4xl">📿</span>
+                </div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
+                  宗教学クイズ
+                </h1>
+                <p className="text-slate-500 mt-2">136問の4択問題で学習</p>
+              </div>
+
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 mb-6">
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div>
+                    <p className="text-2xl font-bold text-slate-800">{quizData.length}</p>
+                    <p className="text-xs text-slate-500">総問題数</p>
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-slate-800">{categories.length}</p>
+                    <p className="text-xs text-slate-500">カテゴリ</p>
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-amber-600">{wrongQuestions.length}</p>
+                    <p className="text-xs text-slate-500">復習待ち</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3 mb-8">
+                <button
+                  onClick={() => startQuiz('normal', 'all')}
+                  className="w-full py-4 px-6 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-xl shadow-lg shadow-amber-200 hover:shadow-xl hover:shadow-amber-300 transition-all duration-300 active:scale-98"
+                >
+                  🎯 全問ランダム出題
+                </button>
+                
+                {wrongQuestions.length > 0 && (
+                  <button
+                    onClick={() => startQuiz('review')}
+                    className="w-full py-4 px-6 bg-gradient-to-r from-rose-500 to-pink-500 text-white font-bold rounded-xl shadow-lg shadow-rose-200 hover:shadow-xl hover:shadow-rose-300 transition-all duration-300 active:scale-98"
+                  >
+                    🔄 間違えた問題を復習 ({wrongQuestions.length}問)
+                  </button>
+                )}
+              </div>
+
+              <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+                <h2 className="font-bold text-slate-700 mb-3 px-2">📚 カテゴリ別に学習</h2>
+                <div className="max-h-64 overflow-y-auto space-y-2">
+                  {categories.map(category => {
+                    const count = quizData.filter(q => q.category === category).length;
+                    return (
+                      <button
+                        key={category}
+                        onClick={() => startQuiz('normal', category)}
+                        className="w-full py-3 px-4 bg-slate-50 hover:bg-amber-50 rounded-xl text-left transition-all duration-200 flex justify-between items-center group"
+                      >
+                        <span className="text-slate-700 group-hover:text-amber-700 font-medium">{category}</span>
+                        <span className="text-sm text-slate-400 bg-white px-2 py-1 rounded-lg">{count}問</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
           </div>
-        ))}
-      </div>
+        );
+      }
 
-      {openLog && (
-        <div className="modal-bg" onClick={()=>setOpenLog(null)}>
-          <div className="modal" onClick={e=>e.stopPropagation()}>
-            <h3>学習ログ詳細</h3>
-            <pre>{JSON.stringify(openLog,null,2)}</pre>
-            <button className="btn primary" onClick={()=>setOpenLog(null)}>閉じる</button>
+      // Result Screen
+      if (screen === 'quiz' && showResult) {
+        const percentage = Math.round((score / questions.length) * 100);
+        let message, emoji;
+        
+        if (percentage === 100) { message = '完璧！'; emoji = '🏆'; }
+        else if (percentage >= 80) { message = '素晴らしい！'; emoji = '🎉'; }
+        else if (percentage >= 60) { message = 'よくできました！'; emoji = '👏'; }
+        else if (percentage >= 40) { message = 'もう少し！'; emoji = '💪'; }
+        else { message = '復習しましょう'; emoji = '📖'; }
+
+        return (
+          <div className="min-h-screen bg-gradient-to-br from-slate-50 via-amber-50 to-orange-50 flex items-center justify-center px-4">
+            <div className="max-w-md w-full">
+              <div className="bg-white rounded-3xl p-8 shadow-xl text-center">
+                <div className="text-6xl mb-4">{emoji}</div>
+                <h2 className="text-2xl font-bold text-slate-800 mb-2">{message}</h2>
+                <p className="text-slate-500 mb-6">
+                  {quizMode === 'review' ? '復習モード' : selectedCategory === 'all' ? '全カテゴリ' : selectedCategory}
+                </p>
+                
+                <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6 mb-6">
+                  <p className="text-5xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
+                    {percentage}%
+                  </p>
+                  <p className="text-slate-600 mt-2">
+                    {questions.length}問中 {score}問正解
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  {wrongQuestions.length > 0 && (
+                    <button
+                      onClick={() => startQuiz('review')}
+                      className="w-full py-3 px-6 bg-gradient-to-r from-rose-500 to-pink-500 text-white font-bold rounded-xl"
+                    >
+                      🔄 間違えた問題を復習
+                    </button>
+                  )}
+                  <button
+                    onClick={() => startQuiz('normal', selectedCategory)}
+                    className="w-full py-3 px-6 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-xl"
+                  >
+                    🔁 もう一度挑戦
+                  </button>
+                  <button
+                    onClick={() => setScreen('home')}
+                    className="w-full py-3 px-6 bg-slate-100 text-slate-700 font-bold rounded-xl"
+                  >
+                    🏠 ホームに戻る
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-      )}
-    </div>
-  );
+        );
+      }
 
-  if(mode==="result") return (
-    <div className="container">
-      <div className="card">
-        <h2>結果</h2>
-        <p>{correct} / {currentSet.length}</p>
-        <button className="btn primary" onClick={()=>setMode("home")}>ホームへ</button>
-      </div>
-    </div>
-  );
+      // Quiz Screen
+      if (screen === 'quiz' && currentQuestion) {
+        return (
+          <div className="min-h-screen bg-gradient-to-br from-slate-50 via-amber-50 to-orange-50">
+            <div className="max-w-lg mx-auto px-4 py-4">
+              <div className="flex items-center justify-between mb-4">
+                <button
+                  onClick={() => setScreen('home')}
+                  className="p-2 rounded-xl bg-white shadow-sm text-slate-500 hover:text-slate-700"
+                >
+                  ✕
+                </button>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-medium text-slate-500">
+                    {currentIndex + 1} / {questions.length}
+                  </span>
+                  <span className="px-3 py-1 bg-white rounded-full text-sm font-bold text-amber-600 shadow-sm">
+                    {accuracy}%
+                  </span>
+                </div>
+              </div>
 
-  return (
-    <div className="container">
-      <div className="card">
-        <div>{index+1} / {currentSet.length}</div>
-        <div className="progress"><div style={{width:`${(index/currentSet.length)*100}%`}}/></div>
-        <h3>{q.question}</h3>
-        {q.options.map((o,i)=>(
-          <button key={i} className="btn ghost" onClick={()=>answer(i)}>{o}</button>
-        ))}
-      </div>
-    </div>
-  );
-}
+              <div className="h-2 bg-slate-200 rounded-full mb-6 overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-amber-400 to-orange-500 transition-all duration-500"
+                  style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
+                />
+              </div>
 
-ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
-</script>
+              <div className="mb-4">
+                <span className="inline-block px-3 py-1 bg-amber-100 text-amber-700 text-xs font-medium rounded-full">
+                  {currentQuestion.category}
+                </span>
+              </div>
+
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 mb-6">
+                <p className="text-lg font-medium text-slate-800 leading-relaxed">
+                  {currentQuestion.question}
+                </p>
+              </div>
+
+              <div className="space-y-3 mb-6">
+                {['A', 'B', 'C', 'D'].map(choice => (
+                  <button
+                    key={choice}
+                    onClick={() => handleAnswer(choice)}
+                    disabled={!!selectedAnswer}
+                    className={getButtonStyle(choice)}
+                  >
+                    <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100 text-slate-600 font-bold mr-3 text-sm">
+                      {choice}
+                    </span>
+                    {currentQuestion[`choice_${choice.toLowerCase()}`]}
+                  </button>
+                ))}
+              </div>
+
+              {selectedAnswer && (
+                <button
+                  onClick={nextQuestion}
+                  className="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-xl shadow-lg shadow-amber-200 transition-all duration-300 active:scale-98"
+                >
+                  {currentIndex < questions.length - 1 ? '次の問題へ →' : '結果を見る'}
+                </button>
+              )}
+
+              {selectedAnswer && (
+                <div className={`mt-4 p-4 rounded-xl ${
+                  selectedAnswer === currentQuestion.answer 
+                    ? 'bg-emerald-50 border border-emerald-200' 
+                    : 'bg-rose-50 border border-rose-200'
+                }`}>
+                  <p className={`font-bold ${
+                    selectedAnswer === currentQuestion.answer ? 'text-emerald-700' : 'text-rose-700'
+                  }`}>
+                    {selectedAnswer === currentQuestion.answer ? '⭕ 正解！' : '❌ 不正解'}
+                  </p>
+                  {selectedAnswer !== currentQuestion.answer && (
+                    <p className="text-slate-600 mt-1 text-sm">
+                      正解: {currentQuestion.answer}. {currentQuestion[`choice_${currentQuestion.answer.toLowerCase()}`]}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      }
+
+      return null;
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
 </body>
 </html>
